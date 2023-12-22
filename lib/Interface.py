@@ -95,7 +95,7 @@ class SLMSuiteInterface:
         """
         return slmsuite.holography.toolbox.phase.lens(self.slm, focal_length), 1
 
-    def calculate(self, computational_shape, target_spot_array, target_amps=None, save_options=None, extra_info = None):
+    def calculate(self, computational_shape, target_spot_array, target_amps=None, n_iters=20, save_options=None, extra_info = None):
         """
             Calculates the required phase pattern
 
@@ -120,9 +120,9 @@ class SLMSuiteInterface:
             no_calib = 0
         ntargets = target_spot_array.shape[1]
         if ntargets == 1:
-            self.hologram.optimize(method="GS", maxiter=20, feedback='computational_spot')
+            self.hologram.optimize(method="GS", maxiter=n_iters, feedback='computational_spot')
         else:
-            self.hologram.optimize(method="WGS-Kim", maxiter=20, feedback='computational_spot')
+            self.hologram.optimize(method="WGS-Kim", maxiter=n_iters, feedback='computational_spot')
 
         full_path = None
         full_path2 = None

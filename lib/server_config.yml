@@ -1,0 +1,9 @@
+url: tcp://127.0.0.1:8878
+slm:
+  type: virtual
+camera:
+  type: virtual
+alg:
+  computational_space: [2048, 2048]
+  n_iterations: 5
+#pattern_path: C:\msys64\home\goyan\NaCsSLM\lib
