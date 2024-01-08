@@ -59,10 +59,12 @@ class CameraClient(Camera):
         self.recreate_sock()
         self.timeout = 500
 
+        self.width = self.get_width()
+        self.height = self.get_height()
         # Finally, use the superclass constructor to initialize other required variables.
         super().__init__(
-            self.get_width(),
-            self.get_height(),
+            self.width,
+            self.height,
             bitdepth=self.get_depth(),
             name=self.get_serial(),
             **kwargs
@@ -121,13 +123,13 @@ class CameraClient(Camera):
             return data
         return f
 
-    def recv1arr(reshape_dims=None):
+    def recv1arr(reshape_dims=None, dtype=float):
         def deco(func):
             def f(*args, **kwargs):
                 rep = func(*args, **kwargs)
                 data = None
                 if rep is not None:
-                    data = np.frombuffer(rep[0])
+                    data = np.frombuffer(rep[0], dtype=dtype)
                     if reshape_dims is not None:
                         data = np.reshape(data, reshape_dims)
                 return data
@@ -183,9 +185,11 @@ class CameraClient(Camera):
         else:
             self.__sock.send_string("set_woi", zmq.SNDMORE)
             self.__sock.send(woi.tobytes())
+            self.width = int(woi[1])
+            self.height = int(woi[3])
 
     def get_image(self, timeout_s=1):
-        @CameraClient.recv1arr((self.shape[0], self.shape[1]))
+        @CameraClient.recv1arr((self.height, self.width), np.int16)
         @CameraClient.poll_recv([0])
         def _get_image(self):
             self.__sock.send_string("get_image")

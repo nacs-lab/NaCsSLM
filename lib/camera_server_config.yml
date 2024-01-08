@@ -1,3 +1,8 @@
 url: tcp://127.0.0.1:8876
 camera:
-  type: virtual    
+  # type: virtual
+  #type: thorcam_scientific_camera
+  #sn: 12448
+  type: the_imaging_source
+  sn: DMK 27BUP031 29220054
+  vid_format: Y800 (2592x1944)

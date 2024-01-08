@@ -31,6 +31,27 @@ class CameraServer(object):
             camera_type = camera_dict["type"]
             if camera_type == "virtual":
                 self.cam = slmsuite.hardware.cameras.camera.Camera(1024, 1024)
+                self.cam_type = "virtual"
+            elif camera_type == "thorcam_scientific_camera":
+                import slmsuite.hardware.cameras.thorlabs
+                if "sn" in camera_dict:
+                    serial = str(camera_dict["sn"])
+                else:
+                    serial = ""
+                self.cam = slmsuite.hardware.cameras.thorlabs.ThorCam(serial)
+                self.cam_type = "thorcam_scientific_camera"
+            elif camera_type == "the_imaging_source":
+                import tis_camera as ts
+                if "sn" in camera_dict:
+                    serial = str(camera_dict["sn"])
+                else:
+                    serial = ""
+                if "vid_format" in camera_dict:
+                    vid_format = str(camera_dict["vid_format"])
+                else:
+                    vid_format = None
+                self.cam = ts.TISCamera(serial,vid_format)
+                self.cam_type = "the_imaging_source"
             else:
                 raise Exception("Camera type not recognized")
         else:
@@ -165,23 +186,37 @@ class CameraServer(object):
         print("Worker finishing")
 
     def get_width(self):
-        width = np.array([1024])
-        return [0], [width.tobytes()]
+        if self.cam_type == "virtual":
+            width = int(1024)
+        else:
+            width = int(self.cam.shape[1])
+        return [0], [width.to_bytes(4, 'little')]
 
     def get_height(self):
-        height = np.array([1024])
-        return [0], [height.tobytes()]
+        if self.cam_type == "virtual":
+            height = int(1024)
+        else:
+            height = int(self.cam.shape[0])
+        return [0], [height.to_bytes(4, 'little')]
 
     def get_depth(self):
-        depth = 8 
-        return [0], [int(depth).to_bytes(1, 'little')]
+        if self.cam_type == "virtual":
+            depth = int(8)
+        else:
+            depth = int(self.cam.bitdepth)
+        return [0], [depth.to_bytes(4, 'little')]
 
     def get_serial(self):
-        name = "test_camera"
+        if self.cam_type == "virtual":
+            name = "virtual_camera"
+        else:
+            name = self.cam.name
         return [1], [name]
 
     def close(self):
-        print("closing")
+        print("closing the camera")
+        if self.cam_type != "virtual":
+            self.cam.close()
         return [1], ["ok"]
 
     def info(self):
@@ -189,7 +224,10 @@ class CameraServer(object):
         return [1], ["some_info"]
 
     def get_exposure(self):
-        exposure = np.array([0.1])
+        if self.cam_type == "virtual":
+            exposure = np.array([0.1])
+        else:
+            exposure = np.array(self.cam.get_exposure())
         return [0], [exposure.tobytes()]
 
     def set_exposure(self):
@@ -197,18 +235,29 @@ class CameraServer(object):
         exposure = np.frombuffer(exposure)
         exposure = exposure[0]
         print("Exposure set to " + str(exposure))
+        if self.cam_type != "virtual":
+            self.cam.set_exposure(exposure)
         return [1], ["set"]
 
     def set_woi(self):
         woi = self.safe_recv()
         woi = np.frombuffer(woi)
         print("woi set to " + str(woi))
+        if self.cam_type != "virtual":
+            self.cam.set_woi(woi)
         return [1], ["woi set"]
 
     def get_image(self):
-        fake_img = np.random.rand(1024, 1024)
-        return [0], [fake_img.tobytes()]
+        if self.cam_type == "virtual":
+            img = np.random.rand(1024, 1024)
+        else:
+            img = self.cam.get_image()
+            if self.cam_type == "the_imaging_source":
+                img = img.astype(np.int16)
+        return [0], [img.tobytes()]
 
     def flush(self):
         print("flushing")
+        if self.cam_type != "virtual":
+            self.cam.flush()
         return [1], ["flushed"]
