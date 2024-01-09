@@ -1,6 +1,11 @@
 url: tcp://127.0.0.1:8878
 slm:
-  type: virtual
+  #type: virtual
+  type: hamamatsu
+  display_num: 1
+  bitdepth: 8
+  wav_design_um: 1.064
+  wav_um: 0.7
 camera:
   type: virtual
 alg:

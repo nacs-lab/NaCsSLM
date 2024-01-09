@@ -28,6 +28,14 @@ class Server(object):
             slm_type = slm_dict["type"]
             if slm_type == "virtual":
                 slm = iface.set_SLM()
+            elif slm_type == "hamamatsu":
+                display_num = slm_dict["display_num"]
+                bitdepth = slm_dict["bitdepth"]
+                wav_design_um = slm_dict["wav_design_um"] # This is the design wavelenth of the SLM. Namely, it's the wavelength at which 2 pi phase modulation is achieved at max value 255
+                wav_um = slm_dict["wav_um"] # Actual wavelength
+                from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
+                slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
+                iface.set_SLM(slm)
             else:
                 raise Exception("SLM type not recognized")
         else:
@@ -37,6 +45,11 @@ class Server(object):
             camera_type = camera_dict["type"]
             if camera_type == "virtual":
                 camera = iface.set_camera()
+            elif camera_type == "network":
+                url = camera_dict["url"]
+                import CameraClient
+                camera = CameraClient.CameraClient(url)
+                iface.set_camera(camera)
             else:
                 raise Exception("Camera type not recognized")
         else:
