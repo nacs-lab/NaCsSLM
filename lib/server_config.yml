@@ -1,14 +1,14 @@
-url: tcp://127.0.0.1:8878
+url: tcp://*:8878
 slm:
   #type: virtual
   type: hamamatsu
-  display_num: 1
+  display_num: 2
   bitdepth: 8
-  wav_design_um: 1.064
-  wav_um: 0.7
+  wav_design_um: 0.7
+  wav_um: 0.616
 camera:
   type: virtual
 alg:
   computational_space: [2048, 2048]
-  n_iterations: 5
+  n_iterations: 20
 #pattern_path: C:\msys64\home\goyan\NaCsSLM\lib

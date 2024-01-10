@@ -19,42 +19,12 @@ class Server(object):
         self.__sock.bind(self.__url)
 
     def __init__(self, config_file):
-
         with open(config_file, 'r') as fhdl:
             self.config = yaml.load(fhdl, Loader=yaml.FullLoader)
         config = self.config
-        iface = Interface.SLMSuiteInterface()
-        if "slm" in config:
-            slm_dict = config["slm"]
-            slm_type = slm_dict["type"]
-            if slm_type == "virtual":
-                slm = iface.set_SLM()
-            elif slm_type == "hamamatsu":
-                display_num = slm_dict["display_num"]
-                bitdepth = slm_dict["bitdepth"]
-                wav_design_um = slm_dict["wav_design_um"] # This is the design wavelenth of the SLM. Namely, it's the wavelength at which 2 pi phase modulation is achieved at max value 255
-                wav_um = slm_dict["wav_um"] # Actual wavelength
-                from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
-                slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
-                iface.set_SLM(slm)
-            else:
-                raise Exception("SLM type not recognized")
-        else:
-            raise Exception("Please specify an SLM with the slm field")
-        if "camera" in config:
-            camera_dict = config["camera"]
-            camera_type = camera_dict["type"]
-            if camera_type == "virtual":
-                camera = iface.set_camera()
-            elif camera_type == "network":
-                url = camera_dict["url"]
-                import CameraClient
-                camera = CameraClient.CameraClient(url)
-                iface.set_camera(camera)
-            else:
-                raise Exception("Camera type not recognized")
-        else:
-            raise Exception("Please specify a camera with the camera field")
+        # lock for worker request
+        self.__worker_lock = threading.Lock()
+
         if "url" in config:
             url = config["url"]
         else:
@@ -73,12 +43,6 @@ class Server(object):
                 self.n_iterations = alg_dict["n_iterations"]
             else:
                 self.n_iterations = 20
-
-        self.iface = iface
-
-        # lock for worker request
-        self.__worker_lock = threading.Lock()
-
         # network
         self.__url = url
         self.__ctx = zmq.Context()
@@ -193,6 +157,40 @@ class Server(object):
 
     def __worker_func(self):
         # worker function
+        config = self.config
+        iface = Interface.SLMSuiteInterface()
+        if "slm" in config:
+            slm_dict = config["slm"]
+            slm_type = slm_dict["type"]
+            if slm_type == "virtual":
+                slm = iface.set_SLM()
+            elif slm_type == "hamamatsu":
+                display_num = slm_dict["display_num"]
+                bitdepth = slm_dict["bitdepth"]
+                wav_design_um = slm_dict["wav_design_um"] # This is the design wavelenth of the SLM. Namely, it's the wavelength at which 2 pi phase modulation is achieved at max value 255
+                wav_um = slm_dict["wav_um"] # Actual wavelength
+                from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
+                slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
+                iface.set_SLM(slm)
+            else:
+                raise Exception("SLM type not recognized")
+        else:
+            raise Exception("Please specify an SLM with the slm field")
+        if "camera" in config:
+            camera_dict = config["camera"]
+            camera_type = camera_dict["type"]
+            if camera_type == "virtual":
+                camera = iface.set_camera()
+            elif camera_type == "network":
+                url = camera_dict["url"]
+                import CameraClient
+                camera = CameraClient.CameraClient(url)
+                iface.set_camera(camera)
+            else:
+                raise Exception("Camera type not recognized")
+        else:
+            raise Exception("Please specify a camera with the camera field")
+        self.iface = iface
         while self.__check_worker_req() != self.WorkerRequest.Stop:
             if self.__sock.poll(self.timeout) == 0: # in milliseconds
                 continue
