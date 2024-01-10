@@ -3,6 +3,7 @@ import yaml
 import zmq
 import threading
 import numpy as np
+import utils
 from enum import Enum
 
 class Server(object):
@@ -205,8 +206,13 @@ class Server(object):
 
     def use_pattern(self):
         fname = self.safe_recv_string()
-        # TO DO
         print("Received " + fname)
+        phase = self.load_phase(fname)
+        if self.additional_phase is not None:
+            tot_phase = phase + self.additional_phase
+        else:
+            tot_phase = phase
+        self.iface.write_to_SLM(tot_phase)
         return [1], ["ok"]
 
     def calculate(self):
@@ -246,6 +252,12 @@ class Server(object):
         save_options["crop"] = True # This option crops the slm pattern to the slm, instead of an array the shape of the computational space size.
         config_path, pattern_path, err = self.iface.save_calculation(save_options)
         return [1,1], [config_path, pattern_path]
+
+    def load_phase(self, path):
+        tot_path = self.pattern_path + path
+        _,data = utils.load_slm_calculation(tot_path, 0, 1)
+        return data["slm_phase"]
+
 
     def add_fresnel_lens(self):
         focal_length = self.safe_recv()
