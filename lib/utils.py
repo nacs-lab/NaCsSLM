@@ -82,3 +82,15 @@ def save_slm_calculation(hologram, save_options, extra_data = None):
         full_path2 = full_path2 + ".npz" # Add file extension
 
     return full_path, full_path2
+
+def load_slm_calculation(base_path, bConfig, bPhase):
+    config = None
+    data = None
+    if bConfig:
+        config_path = base_path + "_config.yml"
+        with open(config_path, 'r') as fhdl:
+            config = yaml.load(fhdl, Loader=yaml.FullLoader)
+    if bPhase:
+        data_path = base_path + "_data.npz"
+        data = np.load(data_path)
+    return config,data
