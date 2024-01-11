@@ -86,4 +86,10 @@ class Client(object):
         pattern_path = ret2[1]
         pattern_path_to_send = pattern_path[:-9]
         ret3 = self.send_pattern(pattern_path_to_send)
-        return config_path, pattern_path, ret3
+        ret4 = self.send_project()
+        return config_path, pattern_path, ret3, ret4
+
+    def load_and_project(self, fname):
+        ret = self.send_pattern(fname)
+        ret2 = self.send_project()
+        return ret, ret2
