@@ -93,6 +93,10 @@ class Server(object):
             msg_type, rep = self.add_zernike_poly()
         elif msg_str == "reset_additional_phase":
             msg_type, rep = self.reset_additional_phase()
+        elif msg_str == "save_additional_phase":
+            msg_type, rep = self.save_add_phase()
+        elif msg_str == "use_additional_phase":
+            msg_type, rep = self.use_add_phase()
         elif msg_str == "project":
             msg_type, rep = self.project()
         else:
@@ -207,8 +211,14 @@ class Server(object):
     def use_pattern(self):
         fname = self.safe_recv_string()
         print("Received " + fname)
-        phase = self.load_phase(fname)
+        phase = self.load_pattern(fname)
         self.phase_mgr.set_base(phase, fname)
+        return [1], ["ok"]
+
+    def use_add_phase(self):
+        fname = self.safe_recv_string()
+        print("Received for add phase: " + fname)
+        self.phase_mgr.add_from_file(fname)
         return [1], ["ok"]
 
     def project(self):
@@ -253,7 +263,18 @@ class Server(object):
         config_path, pattern_path, err = self.iface.save_calculation(save_options)
         return [1,1], [config_path, pattern_path]
 
-    def load_phase(self, path):
+    def save_add_phase(self):
+        save_path = self.safe_recv_string()
+        save_name = self.safe_recv_string()
+        save_options = dict()
+        save_options["config"] = True # This option saves the information about how this additional phase was created
+        save_options["phase"] = True # saves the actual phase
+        save_options["path"] = save_path # Enable this to save to a desired path. By default it is the current working directory
+        save_options["name"] = save_name # This name will be used in the path.
+        config_path, pattern_path = self.phase_mgr.save_to_file(save_options)
+        return [1,1], [config_path, pattern_path]
+
+    def load_pattern(self, path):
         tot_path = self.pattern_path + path
         _,data = utils.load_slm_calculation(tot_path, 0, 1)
         return data["slm_phase"]

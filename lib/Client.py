@@ -42,6 +42,11 @@ class Client(object):
     def send_pattern(self, path_str):
         self.__sock.send_string("use_pattern", zmq.SNDMORE)
         self.__sock.send_string(path_str)
+
+    @poll_recv([1])
+    def send_add_phase(self, path_str):
+        self.__sock.send_string("use_additional_phase", zmq.SNDMORE)
+        self.__sock.send_string(path_str)
     
     @poll_recv([1], timeout=-1)
     def send_calculate(self, targets, amps, iterations):
@@ -54,6 +59,12 @@ class Client(object):
     @poll_recv([1, 1], timeout=-1)
     def send_save(self, save_path, save_name):
         self.__sock.send_string("save_calculation", zmq.SNDMORE)
+        self.__sock.send_string(save_path, zmq.SNDMORE)
+        self.__sock.send_string(save_name)
+
+    @poll_recv([1, 1], timeout=-1)
+    def send_save_add_phase(self, save_path, save_name):
+        self.__sock.send_string("save_additional_phase", zmq.SNDMORE)
         self.__sock.send_string(save_path, zmq.SNDMORE)
         self.__sock.send_string(save_name)
 

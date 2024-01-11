@@ -1,5 +1,7 @@
 import numpy as np
 import slmsuite.holography.toolbox.phase
+import utils
+#from PIL import Image
 
 class PhaseManager(object):
     def __init__(self, slm):
@@ -35,6 +37,16 @@ class PhaseManager(object):
         self.additional = self.additional + phase
         self.add_log.append(["zernike", zernike_list])
 
+    def save_to_file(self, save_options, extra_info=None):
+        full_path, full_path2 = utils.save_add_phase(self, save_options, extra_info)
+        return full_path, full_path2
+
+    def add_from_file(self, fname):
+        #with Image.open(fname) as image:
+        #    image_array = np.array(image)
+        _,data = utils.load_add_phase(fname, 0, 1)
+        self.additional = self.additional + data["phase"]
+        self.add_log.append(["file", fname])
 
 
 
