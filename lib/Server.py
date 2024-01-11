@@ -4,6 +4,7 @@ import zmq
 import threading
 import numpy as np
 import utils
+import PhaseManager
 from enum import Enum
 
 class Server(object):
@@ -57,7 +58,7 @@ class Server(object):
         self.__worker.start()
 
         # additional phase. For instance, Fresnel lens or zernike polynomial. 
-        self.additional_phase = None
+        self.phase_mgr = PhaseManager.PhaseManager(self.slm)
 
     def __del__(self):
         self.stop_worker()
@@ -206,11 +207,8 @@ class Server(object):
         fname = self.safe_recv_string()
         print("Received " + fname)
         phase = self.load_phase(fname)
-        if self.additional_phase is not None:
-            tot_phase = phase + self.additional_phase
-        else:
-            tot_phase = phase
-        self.iface.write_to_SLM(tot_phase)
+        self.phase_mgr.set_base(phase, fname)
+        self.iface.write_to_SLM(self.phase_mgr.get())
         return [1], ["ok"]
 
     def calculate(self):
@@ -260,11 +258,12 @@ class Server(object):
     def add_fresnel_lens(self):
         focal_length = self.safe_recv()
         focal_length = np.frombuffer(focal_length)
-        phase, _ = self.iface.get_lens_phase(focal_length[0])
-        if self.additional_phase is None:
-            self.additional_phase = phase
-        else:
-            self.additional_phase = self.additional_phase + phase
+        #phase, _ = self.iface.get_lens_phase(focal_length[0])
+        #if self.additional_phase is None:
+        #    self.additional_phase = phase
+        #else:
+        #    self.additional_phase = self.additional_phase + phase
+        self.phase_mgr.add_fresnel_lens(focal_length)
         return [1], ["ok"]
 
     def add_zernike_poly(self):
@@ -275,13 +274,14 @@ class Server(object):
         poly_list = []
         for i in range(int(npolys)):
             poly_list.append(((int(poly_arr[i, 0]), int(poly_arr[i, 1])), poly_arr[i, 2]))
-        phase, _ = self.iface.get_zernike_sum_phase(poly_list)
-        if self.additional_phase is None:
-            self.additional_phase = phase
-        else:
-            self.additional_phase = self.additional_phase + phase
+        self.phase_mgr.add_zernike_poly(poly_list)
+        #phase, _ = self.iface.get_zernike_sum_phase(poly_list)
+        #if self.additional_phase is None:
+        #    self.additional_phase = phase
+        #else:
+        #    self.additional_phase = self.additional_phase + phase
         return [1], ["ok"]
 
     def reset_additional_phase(self):
-        self.additional_phase = None
+        self.phase_mgr.reset_additional()
         return [1], ["ok"]
