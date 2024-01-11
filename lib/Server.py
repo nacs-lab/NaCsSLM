@@ -93,6 +93,8 @@ class Server(object):
             msg_type, rep = self.add_zernike_poly()
         elif msg_str == "reset_additional_phase":
             msg_type, rep = self.reset_additional_phase()
+        elif msg_str == "project":
+            msg_type, rep = self.project()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -207,6 +209,9 @@ class Server(object):
         print("Received " + fname)
         phase = self.load_phase(fname)
         self.phase_mgr.set_base(phase, fname)
+        return [1], ["ok"]
+
+    def project(self):
         self.iface.write_to_SLM(self.phase_mgr.get())
         return [1], ["ok"]
 

@@ -72,6 +72,10 @@ class Client(object):
     def send_reset_add_phase(self):
         self.__sock.send_string("reset_additional_phase")
 
+    @poll_recv([1])
+    def send_project(self):
+        self.__sock.send_string("project")
+
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)
         if ret[0] != "ok":
