@@ -5,9 +5,9 @@ class PhaseManager(object):
     def __init__(self, slm):
         self.slm = slm
         self.shape = slm.shape
-        self.base = np.zeros(self.shape)
+        self.base = np.zeros(self.shape,dtype=np.float32)
         self.base_source = ''
-        self.additional = np.zeros(self.shape)
+        self.additional = np.zeros(self.shape,dtype=np.float32)
         self.add_log = [] # log for everything that has been added to this additional phase
 
     def set_base(self, base, source = ''):

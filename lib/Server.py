@@ -262,7 +262,7 @@ class Server(object):
         #    self.additional_phase = phase
         #else:
         #    self.additional_phase = self.additional_phase + phase
-        self.phase_mgr.add_fresnel_lens(focal_length)
+        self.phase_mgr.add_fresnel_lens(focal_length[0])
         return [1], ["ok"]
 
     def add_zernike_poly(self):
