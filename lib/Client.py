@@ -69,6 +69,11 @@ class Client(object):
         self.__sock.send_string(save_name)
 
     @poll_recv([1])
+    def send_correction(self, path):
+        self.__sock.send_string("use_correction", zmq.SNDMORE)
+        self.__sock.send_string(path)
+
+    @poll_recv([1])
     def send_fresnel_lens(self, focal_length):
         # focal length should be one element array
         self.__sock.send_string("add_fresnel_lens", zmq.SNDMORE)

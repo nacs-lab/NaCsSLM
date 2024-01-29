@@ -97,6 +97,8 @@ class Server(object):
             msg_type, rep = self.save_add_phase()
         elif msg_str == "use_additional_phase":
             msg_type, rep = self.use_add_phase()
+        elif msg_str == "use_correction":
+            msg_type, rep = self.use_correction()
         elif msg_str == "project":
             msg_type, rep = self.project()
         else:
@@ -219,6 +221,15 @@ class Server(object):
         fname = self.safe_recv_string()
         print("Received for add phase: " + fname)
         self.phase_mgr.add_from_file(fname)
+        return [1], ["ok"]
+
+    def use_correction(self):
+        fname = self.safe_recv_string()
+        print("Received correction pattern: " + fname)
+        if self.config["slm"]["type"] == "hamamatsu":
+            self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1)
+        else:
+            self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1) #TODO, in case you need to scale.
         return [1], ["ok"]
 
     def project(self):
