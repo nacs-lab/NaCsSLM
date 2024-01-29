@@ -99,6 +99,8 @@ class Server(object):
             msg_type, rep = self.use_add_phase()
         elif msg_str == "use_correction":
             msg_type, rep = self.use_correction()
+        elif msg_str == "use_slm_amp":
+            msg_type, rep = self.use_slm_amp()
         elif msg_str == "project":
             msg_type, rep = self.project()
         else:
@@ -230,6 +232,27 @@ class Server(object):
             self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1)
         else:
             self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1) #TODO, in case you need to scale.
+        return [1], ["ok"]
+
+    def use_slm_amp(self):
+        func = self.safe_recv_string()
+        if func == "gaussian":
+            waist_x = self.safe_recv()
+            waist_x = np.frombuffer(waist_x)
+            waist_y = self.safe_recv()
+            waist_y = np.frombuffer(waist_y)
+
+            shape = self.iface.slm.shape
+            xpix = (shape[0] - 1) *  np.linspace(-.5, .5, shape[0])
+            ypix = (shape[1] - 1) * np.linspace(-.5, .5, shape[1])
+
+            x_grid, y_grid = np.meshgrid(xpix, ypix)
+
+            gaussian_amp = np.exp(-np.square(x_grid) * (1 / waist_x**2)) * np.exp(-np.square(y_grid) * (1 / waist_y**2))
+
+            self.iface.set_slm_amplitude(gaussian_amp)
+        else:
+            print("Unknown amp type")
         return [1], ["ok"]
 
     def project(self):

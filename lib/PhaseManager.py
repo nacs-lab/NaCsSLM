@@ -51,7 +51,7 @@ class PhaseManager(object):
     def add_correction(self, fname, bitdepth, scale):
         with Image.open(fname) as image:
             image_array = np.array(image)
-        image_array = image_array / (2**bitdepth) * 2 * np.pi * scale
+        image_array = image_array / (2**bitdepth - 1) * 2 * np.pi * scale
         act_image_array = np.zeros((1024,1280))
         act_image_array[:,4:1276] = image_array 
         self.additional = self.additional + act_image_array
