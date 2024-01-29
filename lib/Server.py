@@ -243,8 +243,8 @@ class Server(object):
             waist_y = np.frombuffer(waist_y)
 
             shape = self.iface.slm.shape
-            xpix = (shape[0] - 1) *  np.linspace(-.5, .5, shape[0])
-            ypix = (shape[1] - 1) * np.linspace(-.5, .5, shape[1])
+            xpix = (shape[1] - 1) *  np.linspace(-.5, .5, shape[1])
+            ypix = (shape[0] - 1) * np.linspace(-.5, .5, shape[0])
 
             x_grid, y_grid = np.meshgrid(xpix, ypix)
 
