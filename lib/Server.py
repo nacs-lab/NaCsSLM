@@ -218,7 +218,7 @@ class Server(object):
         slm_config_str = "slm: " + self.config["slm"]["type"]
         camera_config_str = "camera: " + self.config["camera"]["type"]
         if self.config["slm"]["type"] == "hamamatsu":
-            slm_config_str = slm_config_str + " display " + self.config["slm"]["display_num"]
+            slm_config_str = slm_config_str + " display " + str(self.config["slm"]["display_num"])
         return [1], [slm_config_str + " / " + camera_config_str]
 
     def use_pattern(self):
