@@ -42,7 +42,7 @@ class Client(object):
 
     @poll_recv([1])
     def send_id(self):
-        self.__sock_send_string("id") # handshake
+        self.__sock.send_string("id") # handshake
 
     @poll_recv([1])
     def send_pattern(self, path_str):
