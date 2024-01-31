@@ -120,7 +120,7 @@ class SLMSuiteInterface:
             no_calib = 0
         ntargets = target_spot_array.shape[1]
         if ntargets == 1:
-            self.hologram.optimize(method="GS", maxiter=n_iters, feedback='computational_spot', stat_groups = ["computational_spot"])
+            self.hologram.optimize(method="GS", maxiter=n_iters, feedback='computational_spot', stat_groups = ["computational"])
         else:
             self.hologram.optimize(method="WGS-Kim", maxiter=n_iters, feedback='computational_spot', stat_groups = ["computational_spot"])
 

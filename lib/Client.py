@@ -1,4 +1,5 @@
 import zmq
+from datetime import datetime
 
 class Client(object):
     def recreate_sock(self):
@@ -36,6 +37,8 @@ class Client(object):
                             rep.append(self.__sock.recv(flag))
                         else:
                             rep.append(self.__sock.recv_string(flag))
+                now = datetime.now()
+                print(now.strftime("%Y%m%d_%H%M%S"))
                 return rep
             return f
         return deco
@@ -104,6 +107,10 @@ class Client(object):
     @poll_recv([1])
     def send_project(self):
         self.__sock.send_string("project")
+
+    @poll_recv([1])
+    def send_get_current_phase_info(self):
+        self.__sock.send_string("get_current_phase_info")
 
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)

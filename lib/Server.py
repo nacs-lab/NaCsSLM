@@ -105,6 +105,8 @@ class Server(object):
             msg_type, rep = self.use_slm_amp()
         elif msg_str == "project":
             msg_type, rep = self.project()
+        elif msg_str == "get_current_phase_info":
+            msg_type, rep = self.get_current_phase_info()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -272,7 +274,6 @@ class Server(object):
         target_data = self.safe_recv()
         target_data = np.frombuffer(target_data)
         amp_data = self.safe_recv()
-        #print(amp_data)
         amp_data = np.frombuffer(amp_data)
         iteration_data = self.safe_recv()
         print(iteration_data)
@@ -354,3 +355,12 @@ class Server(object):
     def reset_additional_phase(self):
         self.phase_mgr.reset_additional()
         return [1], ["ok"]
+
+    def get_current_phase_info(self):
+        base_str = "base: " + self.phase_mgr.base_source
+        add_str = ""
+        log = self.phase_mgr.add_log
+        for item in log:
+            add_str = add_str + item[0] + ":" + item[1] + ","
+        return [1], [base_str + add_str]
+        
