@@ -14,6 +14,8 @@ class Client(object):
         self.__sock = None
         self.recreate_sock()
         self.timeout = 500
+        rep = self.send_id()
+        print(rep)
 
     # decorators for polling
 
@@ -37,6 +39,10 @@ class Client(object):
                 return rep
             return f
         return deco
+
+    @poll_recv([1])
+    def send_id(self):
+        self.__sock_send_string("id") # handshake
 
     @poll_recv([1])
     def send_pattern(self, path_str):

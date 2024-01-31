@@ -81,7 +81,9 @@ class Server(object):
 
     def handle_msg(self, addr,  msg_str: str) -> bool:
         # Method to handle different requests from external clients
-        if msg_str == "use_pattern":
+        if msg_str == "id":
+            msg_type, rep = self.reply_id()
+        elif msg_str == "use_pattern":
             msg_type, rep = self.use_pattern()
         elif msg_str == "calculate":
             msg_type, rep = self.calculate()
@@ -212,6 +214,13 @@ class Server(object):
             self.handle_msg(addr, msg_str)
         print("Worker finishing")
 
+    def reply_id(self):
+        slm_config_str = "slm: " + self.config["slm"]["type"]
+        camera_config_str = "camera: " + self.config["camera"]["type"]
+        if self.config["slm"]["type"] == "hamamatsu":
+            slm_config_str = slm_config_str + " display " + self.config["slm"]["display_num"]
+        return [1], [slm_config_str + " / " + camera_config_str]
+
     def use_pattern(self):
         fname = self.safe_recv_string()
         print("Received " + fname)
@@ -278,6 +287,7 @@ class Server(object):
             # for debug
             self.iface.plot_slmplane()
             self.iface.plot_farfield()
+            self.iface.plot_stats()
             return [1], ["ok"]
         else:
             print("Not integer number of targets")
