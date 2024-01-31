@@ -250,6 +250,16 @@ class SLMSuiteInterface:
         else:
             return -1
 
+    def plot_stats(self):
+        """
+
+        """
+        if self.hologram is not None:
+            self.hologram.plot_stats()
+            return 0
+        else:
+            return -1
+
     def write_to_SLM(self, phase_pattern):
         """
 
