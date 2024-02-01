@@ -361,6 +361,6 @@ class Server(object):
         add_str = ""
         log = self.phase_mgr.add_log
         for item in log:
-            add_str = add_str + item[0] + ":" + item[1] + ","
+            add_str = add_str + str(item[0]) + ":" + str(item[1]) + ","
         return [1], [base_str + add_str]
         
