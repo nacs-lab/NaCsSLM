@@ -65,17 +65,17 @@ class CameraClient(Camera):
         super().__init__(
             self.width,
             self.height,
-            bitdepth=self.get_depth(),
-            name=self.get_serial(),
+            bitdepth= self.get_depth(),
+            name= self.get_serial(),
             **kwargs
         )
 
         # ... Other setup.
-        self.info = self._info
+        self.info = self._info()
 
     # decorators for polling
     # recv_type = 1 is a string receive
-    def poll_recv(recv_type = [1], timeout=1000, flag=0):
+    def poll_recv(recv_type = [1], timeout=-1, flag=0):
         def deco(func):
             def f(self, *args): #timeout in milliseconds
                 try:
@@ -179,14 +179,18 @@ class CameraClient(Camera):
 
     @recv1
     @poll_recv([1])
+    def _set_woi(self, woi):
+        self.__sock.send_string("set_woi", zmq.SNDMORE)
+        self.__sock.send(woi.tobytes())
+        self.width = int(woi[1])
+        self.height = int(woi[3])
+
     def set_woi(self, woi=None):
         if woi is None:
             pass
         else:
-            self.__sock.send_string("set_woi", zmq.SNDMORE)
-            self.__sock.send(woi.tobytes())
-            self.width = int(woi[1])
-            self.height = int(woi[3])
+            self._set_woi(woi)
+            
 
     def get_image(self, timeout_s=1):
         @CameraClient.recv1arr((self.height, self.width), np.int16)

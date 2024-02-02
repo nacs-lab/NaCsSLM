@@ -176,10 +176,13 @@ class AndorServer(object):
                     rep = self.__data
                     msg_type = self.__msg_type
                 self.safe_send(addr, msg_type, rep)
+                with self.__worker_lock:
+                    self.__worker_req = self.WorkerRequest.NoRequest
         print("Worker finishing")
     
     def check_req_from_worker(self):
-        if self.__check_worker_req == self.WorkerRequest.Pending:
+        if self.__check_worker_req() == self.WorkerRequest.Pending:
+            print('Checking for request')
             with self.__req_from_worker_lock:
                 return self.__req_from_worker
 
