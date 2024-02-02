@@ -98,6 +98,10 @@ class Client(object):
         self.__sock.send_string("reset_additional_phase")
 
     @poll_recv([1])
+    def send_reset_pattern(self):
+        self.__sock.send_string("reset_pattern")
+
+    @poll_recv([1])
     def send_slm_amplitude(self, func_type, param1, param2):
         self.__sock.send_string("use_slm_amp", zmq.SNDMORE)
         self.__sock.send_string(func_type, zmq.SNDMORE)

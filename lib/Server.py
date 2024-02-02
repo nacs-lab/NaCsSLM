@@ -5,6 +5,7 @@ import threading
 import numpy as np
 import utils
 import PhaseManager
+import re
 from enum import Enum
 
 class Server(object):
@@ -95,6 +96,8 @@ class Server(object):
             msg_type, rep = self.add_zernike_poly()
         elif msg_str == "reset_additional_phase":
             msg_type, rep = self.reset_additional_phase()
+        elif msg_str == "reset_pattern":
+            msg_type, rep = self.reset_pattern()
         elif msg_str == "save_additional_phase":
             msg_type, rep = self.save_add_phase()
         elif msg_str == "use_additional_phase":
@@ -121,6 +124,16 @@ class Server(object):
             except:
                 msg = None
             return  msg
+        return f
+
+    def safe_process(func):
+        def f(self):
+            try:
+                msg_type, data = func(self)
+            except Exception as e:
+                msg_type = [1]
+                data = ['error: ' + str(e)]
+            return msg_type, data
         return f
 
     @safe_receive
@@ -216,6 +229,7 @@ class Server(object):
             self.handle_msg(addr, msg_str)
         print("Worker finishing")
 
+    @safe_process
     def reply_id(self):
         slm_config_str = "slm: " + self.config["slm"]["type"]
         camera_config_str = "camera: " + self.config["camera"]["type"]
@@ -223,6 +237,7 @@ class Server(object):
             slm_config_str = slm_config_str + " display " + str(self.config["slm"]["display_num"])
         return [1], [slm_config_str + " / " + camera_config_str]
 
+    @safe_process
     def use_pattern(self):
         fname = self.safe_recv_string()
         print("Received " + fname)
@@ -230,12 +245,17 @@ class Server(object):
         self.phase_mgr.set_base(phase, fname)
         return [1], ["ok"]
 
+    @safe_process
     def use_add_phase(self):
         fname = self.safe_recv_string()
         print("Received for add phase: " + fname)
+        if re.match(r'[A-Z]:', fname) is None:
+            # check to see if it's an absolute path
+            fname = self.pattern_path + fname
         self.phase_mgr.add_from_file(fname)
         return [1], ["ok"]
 
+    @safe_process
     def use_correction(self):
         fname = self.safe_recv_string()
         print("Received correction pattern: " + fname)
@@ -245,6 +265,7 @@ class Server(object):
             self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1) #TODO, in case you need to scale.
         return [1], ["ok"]
 
+    @safe_process
     def use_slm_amp(self):
         func = self.safe_recv_string()
         if func == "gaussian":
@@ -266,10 +287,12 @@ class Server(object):
             print("Unknown amp type")
         return [1], ["ok"]
 
+    @safe_process
     def project(self):
         self.iface.write_to_SLM(self.phase_mgr.get())
         return [1], ["ok"]
 
+    @safe_process
     def calculate(self):
         target_data = self.safe_recv()
         target_data = np.frombuffer(target_data)
@@ -294,9 +317,13 @@ class Server(object):
             print("Not integer number of targets")
             return [1], ["error: not integer number of targets"]
 
+    @safe_process
     def save_calculation(self):
         save_path = self.safe_recv_string()
         save_name = self.safe_recv_string()
+        if re.match(r'[A-Z]:', save_path) is None:
+            # check to see if it's an absolute path
+            save_path = self.pattern_path + save_path
         save_options = dict()
         save_options["config"] = True # This option saves the configuration of this run of the algorithm
         save_options["slm_pattern"] = True # This option saves the slm phase pattern and amplitude pattern (the amplitude pattern is not calculated. So far, the above have assumed a constant amplitude and we have not described functionality to change this)
@@ -308,9 +335,13 @@ class Server(object):
         config_path, pattern_path, err = self.iface.save_calculation(save_options)
         return [1,1], [config_path, pattern_path]
 
+    @safe_process
     def save_add_phase(self):
         save_path = self.safe_recv_string()
         save_name = self.safe_recv_string()
+        if re.match(r'[A-Z]:', save_path) is None:
+            # check to see if it's an absolute path
+            save_path = self.pattern_path + save_path
         save_options = dict()
         save_options["config"] = True # This option saves the information about how this additional phase was created
         save_options["phase"] = True # saves the actual phase
@@ -320,11 +351,13 @@ class Server(object):
         return [1,1], [config_path, pattern_path]
 
     def load_pattern(self, path):
-        tot_path = self.pattern_path + path
-        _,data = utils.load_slm_calculation(tot_path, 0, 1)
+        if re.match(r'[A-Z]:', path) is None:
+            # check to see if it's an absolute path
+            path = self.pattern_path + path
+        _,data = utils.load_slm_calculation(path, 0, 1)
         return data["slm_phase"]
 
-
+    @safe_process
     def add_fresnel_lens(self):
         focal_length = self.safe_recv()
         focal_length = np.frombuffer(focal_length)
@@ -336,6 +369,7 @@ class Server(object):
         self.phase_mgr.add_fresnel_lens(focal_length[0])
         return [1], ["ok"]
 
+    @safe_process
     def add_zernike_poly(self):
         poly_arr = self.safe_recv()
         poly_arr = np.frombuffer(poly_arr)
@@ -352,10 +386,17 @@ class Server(object):
         #    self.additional_phase = self.additional_phase + phase
         return [1], ["ok"]
 
+    @safe_process
     def reset_additional_phase(self):
         self.phase_mgr.reset_additional()
         return [1], ["ok"]
 
+    @safe_process
+    def reset_pattern(self):
+        self.phase_mgr.reset_base()
+        return [1], ["ok"]
+
+    @safe_process
     def get_current_phase_info(self):
         base_str = "base: " + self.phase_mgr.base_source
         add_str = ""
