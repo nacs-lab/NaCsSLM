@@ -39,6 +39,7 @@ class AndorServer(object):
         self.__req_from_worker_lock = threading.Lock()
         self.__req_from_worker = None
         self.__rep_addr = None # reply address
+        self.__req_data = None
 
         # network
         self.__url = url
@@ -76,29 +77,43 @@ class AndorServer(object):
         self.__worker.start()
 
     def handle_msg(self, addr,  msg_str: str) -> bool:
-        # Method to handle different requests from external clients
+        # Method to handle different requests from external clients. We handle the ones we know. Andor handling will be limited for now.
         if msg_str == "get_width":
-            pass
+            self.safe_send(addr, [0], [int(512).to_bytes(4, 'little')])
+            return True
         elif msg_str == "get_height":
-            pass
+            self.safe_send(addr, [0], [int(512).to_bytes(4, 'little')])
+            return True
         elif msg_str == "get_depth":
-            pass
+            self.safe_send(addr, [0], [int(16).to_bytes(4, 'little')])
+            return True
         elif msg_str == "get_serial":
-            pass
+            self.safe_send(addr, [1], ["Andor"])
+            return True
         elif msg_str == "close":
-            pass
+            self.safe_send(addr, [1], ["Andor doesn't close"])
+            return True
         elif msg_str == "info":
-            pass
+            self.safe_send(addr, [1], ["Andor"])
+            return True
         elif msg_str == "get_exposure":
             pass
         elif msg_str == "set_exposure":
-            pass
+            exposure = self.safe_recv()
+            exposure = np.frombuffer(exposure)
+            exposure = exposure[0]
+            with self.__req_from_worker_lock:
+                self.__req_data = exposure
         elif msg_str == "set_woi":
-            pass
+            woi = self.safe_recv()
+            woi = np.frombuffer(woi)
+            with self.__req_from_worker_lock:
+                self.__req_data = woi
         elif msg_str == "get_image":
             pass
         elif msg_str == "flush":
-            pass
+            self.safe_send(addr, [1], ["ok"])
+            return True
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -175,16 +190,30 @@ class AndorServer(object):
                 with self.__data_lock:
                     rep = self.__data
                     msg_type = self.__msg_type
+                msg_type, rep = self._reply(msg_type, rep)
                 self.safe_send(addr, msg_type, rep)
                 with self.__worker_lock:
                     self.__worker_req = self.WorkerRequest.NoRequest
         print("Worker finishing")
+
+    def _reply(self, msg_type, data):
+        if msg_type == "get_exposure":
+            exposure = np.array(data)
+            return [0], [exposure.tobytes()]
+        elif msg_type == "set_exposure":
+            return [1], ["ok"]
+        elif msg_str == "set_woi":
+            return [1], ["ok"]
+        elif msg_str == "get_image":
+            return [0], [data.tobytes()]
+        else:
+            return [1], ["unknown reply"]
     
     def check_req_from_worker(self):
         if self.__check_worker_req() == self.WorkerRequest.Pending:
             print('Checking for request')
             with self.__req_from_worker_lock:
-                return self.__req_from_worker
+                return (self.__req_from_worker, self.__req_data)
 
     def reply(self, msg_type, rep):
         with self.__data_lock:

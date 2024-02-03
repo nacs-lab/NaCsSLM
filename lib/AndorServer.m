@@ -6,7 +6,7 @@ classdef AndorServer < handle
         op; % Andor operations struct
     end
 
-    methods(Access = private)
+    methods%(Access = private)
         function self = AndorServer(url)
             [path, ~, ~] = fileparts(mfilename('fullpath'));
             pyglob = py.dict(pyargs('mat_srcpath', path, 'url', url));
@@ -18,24 +18,32 @@ classdef AndorServer < handle
             end
             self.serv = py.eval('AndorServer(url)', pyglob);
             
-            self.op = AndorConfigure(); % Used with default settings
+            %self.op = AndorConfigure(); % Used with default settings
         end
         function res = check_req_from_worker(self)
-            res = self.serv.check_req_from_worker();
+            res = cell(self.serv.check_req_from_worker());
+            res{1} = char(res{1});
         end
         function reply(self, msg_type, rep)
             self.serv.reply(msg_type, rep)
         end
         function handle_msg(self)
-            msg = self.check_req_from_worker();
+            msg_tot = self.check_req_from_worker();
+            msg = msg_tot{1};
+            msg_data = msg_tot{2};
             if strcmp(msg, "get_image")
-                img = AndorTakePicture(self.op);
-                self.reply([0], img);
+                %img = AndorTakePicture(self.op);
+                img = rand(512, 512);
+                self.reply(msg, img);
             elseif strcmp(msg, "get_exposure")
-                t = self.op.ExposureTime;
-                self.reply([0], t);
+                %t = self.op.ExposureTime;
+                t = 0.1;
+                self.reply(msg, t);
+            elseif strcmp(msg, "set_exposure")
+                self.reply(msg, -1);
+            elseif strcmp(msg, "set_woi")
+                self.reply(msg, -1);
             end
-            
         end
     end
     methods

@@ -58,7 +58,6 @@ class CameraClient(Camera):
         self.__sock = None
         self.recreate_sock()
         self.timeout = 500
-
         self.width = self.get_width()
         self.height = self.get_height()
         # Finally, use the superclass constructor to initialize other required variables.
