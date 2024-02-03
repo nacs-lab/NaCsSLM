@@ -33,7 +33,7 @@ classdef AndorServer < handle
             msg_data = msg_tot{2};
             if strcmp(msg, "get_image")
                 %img = AndorTakePicture(self.op);
-                img = rand(512, 512);
+                img = int32(rand(512, 512) * 2^16);
                 self.reply(msg, img);
             elseif strcmp(msg, "get_exposure")
                 %t = self.op.ExposureTime;

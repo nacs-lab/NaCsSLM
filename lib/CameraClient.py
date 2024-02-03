@@ -192,7 +192,7 @@ class CameraClient(Camera):
             
 
     def get_image(self, timeout_s=1):
-        @CameraClient.recv1arr((self.height, self.width), np.int16)
+        @CameraClient.recv1arr((self.height, self.width), np.int32)
         @CameraClient.poll_recv([0])
         def _get_image(self):
             self.__sock.send_string("get_image")

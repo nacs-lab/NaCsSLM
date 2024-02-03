@@ -202,9 +202,9 @@ class AndorServer(object):
             return [0], [exposure.tobytes()]
         elif msg_type == "set_exposure":
             return [1], ["ok"]
-        elif msg_str == "set_woi":
+        elif msg_type == "set_woi":
             return [1], ["ok"]
-        elif msg_str == "get_image":
+        elif msg_type == "get_image":
             return [0], [data.tobytes()]
         else:
             return [1], ["unknown reply"]
@@ -214,6 +214,8 @@ class AndorServer(object):
             print('Checking for request')
             with self.__req_from_worker_lock:
                 return (self.__req_from_worker, self.__req_data)
+        else:
+            return None, None
 
     def reply(self, msg_type, rep):
         with self.__data_lock:
