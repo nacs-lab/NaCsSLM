@@ -53,9 +53,9 @@ class CameraServer(object):
                 self.cam = ts.TISCamera(serial,vid_format)
                 self.cam_type = "the_imaging_source"
             elif camera_type == "network":
-                url = camera_dict["url"]
+                camera_url = camera_dict["url"]
                 import CameraClient
-                self.cam = CameraClient.CameraClient(url)
+                self.cam = CameraClient.CameraClient(camera_url)
                 self.cam_type = "network"
             else:
                 raise Exception("Camera type not recognized")

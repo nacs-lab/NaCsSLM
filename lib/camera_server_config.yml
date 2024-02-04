@@ -1,4 +1,4 @@
-url: tcp://127.0.0.1:8876
+url: tcp://*:8876
 camera:
   # type: virtual
   #type: thorcam_scientific_camera
