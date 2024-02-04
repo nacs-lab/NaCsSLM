@@ -17,8 +17,8 @@ classdef AndorServer < handle
                 py.exec('from AndorServer import AndorServer', pyglob);
             end
             self.serv = py.eval('AndorServer(url)', pyglob);
-            
-            %self.op = AndorConfigure(); % Used with default settings
+
+            self.op = AndorConfigure(); % Used with default settings
         end
         function res = check_req_from_worker(self)
             res = cell(self.serv.check_req_from_worker());
@@ -32,8 +32,8 @@ classdef AndorServer < handle
             msg = msg_tot{1};
             msg_data = msg_tot{2};
             if strcmp(msg, "get_image")
-                %img = AndorTakePicture(self.op);
-                img = int32(rand(512, 512) * 2^16);
+                img = AndorTakePicture(self.op);
+                img = int32(reshape(img,[1, 512 * 512]));
                 self.reply(msg, img);
             elseif strcmp(msg, "get_exposure")
                 %t = self.op.ExposureTime;
