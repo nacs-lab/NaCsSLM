@@ -116,9 +116,20 @@ class Client(object):
     def send_get_current_phase_info(self):
         self.__sock.send_string("get_current_phase_info")
 
-    @poll_recv([1])
+    @poll_recv([1], timeout=-1)
     def send_perform_fourier_calibration(self):
         self.__sock.send_string("perform_fourier_calibration")
+
+    @poll_recv([1])
+    def send_save_fourier_calibration(self, save_path, save_name):
+        self.__sock.send_string("save_fourier_calibration", zmq.SNDMORE)
+        self.__sock.send_string(save_path, zmq.SNDMORE)
+        self.__sock.send_string(save_name)
+
+    @poll_recv([1])
+    def send_load_fourier_calibration(self, path):
+        self.__sock.send_string("load_fourier_calibration", zmq.SNDMORE)
+        self.__sock.send_string(path)
 
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)

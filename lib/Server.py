@@ -112,6 +112,10 @@ class Server(object):
             msg_type, rep = self.get_current_phase_info()
         elif msg_str == "perform_fourier_calibration":
             msg_type, rep = self.perform_fourier_calibration()
+        elif msg_str == "save_fourier_calibration":
+            msg_type, rep = self.save_fourier_calibration()
+        elif msg_str == "load_fourier_calibration":
+            msg_type, rep = self.load_fourier_calibration()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -410,5 +414,18 @@ class Server(object):
     @safe_process
     def perform_fourier_calibration(self):
         # Hard coded for now
-        self.iface.cameraslm.fourier_calibrate(array_shape=[5,5], array_pitch=[30,40], plot=True)
+        self.iface.cameraslm.fourier_calibrate(array_shape=[10,10], array_pitch=[30,40], plot=True)
+        return [1], ["ok"]
+
+    @safe_process
+    def save_fourier_calibration(self):
+        save_path = self.safe_recv_string()
+        save_name = self.safe_recv_string()
+        self.iface.cameraslm.save_fourier_calibration(path=save_path, name=save_name)
+        return [1], ["ok"]
+
+    @safe_process
+    def load_fourier_calibration(self):
+        path = self.safe_recv_string()
+        self.iface.cameraslm.load_fourier_calibration(file_path=path)
         return [1], ["ok"]
