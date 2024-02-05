@@ -143,3 +143,19 @@ def load_add_phase(base_path, bConfig, bPhase):
         data_path = base_path + "_add_phase_data.npz"
         data = np.load(data_path)
     return config,data
+
+
+## Pattern generation
+## Return 2D target array 'targets' such that targets[0,:] = x coords and targets[1,:] = y coords
+## Returns also target_amps which is a 1D array of ones the length of the array size
+#Center at 256 since coordinates are 512x512
+
+def gen_square_targets(side_length, pixel_spacing):
+    targets = np.zeros((2, side_length**2))
+    min_x = int(np.ceil(256-(side_length*pixel_spacing)/2))
+    min_y = min_x
+    x_targets = [min_x + i*pixel_spacing for i in range(0,side_length)]
+    y_targets = [min_y + i*pixel_spacing for i in range(0,side_length)]
+    targets = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
+    target_amps = np.ones(side_length**2)
+    return targets, target_amps
