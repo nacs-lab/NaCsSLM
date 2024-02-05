@@ -131,6 +131,11 @@ class Client(object):
         self.__sock.send_string("load_fourier_calibration", zmq.SNDMORE)
         self.__sock.send_string(path)
 
+    @poll_recv([1], timeout=-1)
+    def send_perform_camera_feedback(self, niters=20):
+        self.__sock.send_string("perform_camera_feedback", zmq.SNDMORE)
+        self.__sock.send(int(niters).to_bytes(1, 'little'))
+
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)
         if ret[0] != "ok":

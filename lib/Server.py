@@ -116,6 +116,8 @@ class Server(object):
             msg_type, rep = self.save_fourier_calibration()
         elif msg_str == "load_fourier_calibration":
             msg_type, rep = self.load_fourier_calibration()
+        elif msg_str == "perform_camera_feedback":
+            msg_type, rep = self.perform_camera_feedback()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -305,7 +307,7 @@ class Server(object):
         amp_data = self.safe_recv()
         amp_data = np.frombuffer(amp_data)
         iteration_data = self.safe_recv()
-        print(iteration_data)
+        #print(iteration_data)
         iteration_number = int.from_bytes(iteration_data, 'little')
         if iteration_number == 0:
             iteration_number = self.n_iterations
@@ -429,3 +431,14 @@ class Server(object):
         path = self.safe_recv_string()
         self.iface.cameraslm.load_fourier_calibration(file_path=path)
         return [1], ["ok"]
+
+    @safe_process
+    def perform_camera_feedback(self):
+        niters = self.safe_recv()
+        niters = int.from_bytes(niters, 'little')
+        if self.iface.hologram is None:
+            return [1], ["no hologram exists to continue camera feedback"]
+        else:
+            self.iface.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', stat_groups=['experimental_spot'], fixed_phase=False)
+            self.iface.hologram.plot_stats()
+            return [1], ["ok"]
