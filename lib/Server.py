@@ -110,6 +110,8 @@ class Server(object):
             msg_type, rep = self.project()
         elif msg_str == "get_current_phase_info":
             msg_type, rep = self.get_current_phase_info()
+        elif msg_str == "perform_fourier_calibration":
+            msg_type, rep = self.perform_fourier_calibration()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -405,3 +407,8 @@ class Server(object):
             add_str = add_str + str(item[0]) + ":" + str(item[1]) + ","
         return [1], [base_str + add_str]
         
+    @safe_process
+    def perform_fourier_calibration(self):
+        # Hard coded for now
+        self.iface.cameraslm.fourier_calibrate(array_shape=[5,5], array_pitch=[30,40], plot=True)
+        return [1], ["ok"]

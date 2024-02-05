@@ -116,6 +116,10 @@ class Client(object):
     def send_get_current_phase_info(self):
         self.__sock.send_string("get_current_phase_info")
 
+    @poll_recv([1])
+    def send_perform_fourier_calibration(self):
+        self.__sock.send_string("perform_fourier_calibration")
+
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)
         if ret[0] != "ok":
