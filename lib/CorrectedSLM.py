@@ -90,8 +90,9 @@ class CorrectedSLM(SLM):
 
     def write(self, phase):
         """
-        Warning phase is not used. The phase manager provides the pattern.
+
         """
+        self.phase_mgr.set_base(phase, "from_function_call")
         self.slm.write(self.phase_mgr.get())
 
     def _write_hw(self, phase):
