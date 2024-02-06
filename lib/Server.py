@@ -439,6 +439,6 @@ class Server(object):
         if self.iface.hologram is None:
             return [1], ["no hologram exists to continue camera feedback"]
         else:
-            self.iface.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', stat_groups=['experimental_spot'], fixed_phase=False)
+            self.iface.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False)
             self.iface.hologram.plot_stats()
             return [1], ["ok"]

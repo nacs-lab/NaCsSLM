@@ -7,8 +7,9 @@ slm:
   wav_design_um: 0.7
   wav_um: 0.616
 camera:
-  type: virtual
+  type: network
+  url: tcp://192.168.0.100:8851
 alg:
-  computational_space: [2048, 2048]
+  computational_space: [2048,2048]
   n_iterations: 20
 #pattern_path: C:\msys64\home\goyan\NaCsSLM\lib
