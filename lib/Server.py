@@ -6,6 +6,7 @@ import numpy as np
 import utils
 import PhaseManager
 import re
+import CorrectedSLM
 from enum import Enum
 
 class Server(object):
@@ -204,11 +205,13 @@ class Server(object):
                 wav_um = slm_dict["wav_um"] # Actual wavelength
                 from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
                 slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
-                iface.set_SLM(slm)
             else:
                 raise Exception("SLM type not recognized")
         else:
             raise Exception("Please specify an SLM with the slm field")
+        self.phase_mgr = PhaseManager.PhaseManager(slm)
+        wrapped_slm = CorrectedSLM.CorrectedSLM(slm, self.phase_mgr)
+        iface.set_SLM(wrapped_slm)
         if "camera" in config:
             camera_dict = config["camera"]
             camera_type = camera_dict["type"]
