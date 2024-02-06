@@ -190,55 +190,58 @@ class Server(object):
             return self.__worker_req
 
     def __worker_func(self):
-        # worker function
-        config = self.config
-        iface = Interface.SLMSuiteInterface()
-        if "slm" in config:
-            slm_dict = config["slm"]
-            slm_type = slm_dict["type"]
-            if slm_type == "virtual":
-                slm = iface.set_SLM()
-            elif slm_type == "hamamatsu":
-                display_num = slm_dict["display_num"]
-                bitdepth = slm_dict["bitdepth"]
-                wav_design_um = slm_dict["wav_design_um"] # This is the design wavelenth of the SLM. Namely, it's the wavelength at which 2 pi phase modulation is achieved at max value 255
-                wav_um = slm_dict["wav_um"] # Actual wavelength
-                from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
-                slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
+        try:
+            # worker function
+            config = self.config
+            iface = Interface.SLMSuiteInterface()
+            if "slm" in config:
+                slm_dict = config["slm"]
+                slm_type = slm_dict["type"]
+                if slm_type == "virtual":
+                    slm = iface.set_SLM()
+                elif slm_type == "hamamatsu":
+                    display_num = slm_dict["display_num"]
+                    bitdepth = slm_dict["bitdepth"]
+                    wav_design_um = slm_dict["wav_design_um"] # This is the design wavelenth of the SLM. Namely, it's the wavelength at which 2 pi phase modulation is achieved at max value 255
+                    wav_um = slm_dict["wav_um"] # Actual wavelength
+                    from slmsuite.hardware.slms.screenmirrored import ScreenMirrored
+                    slm = ScreenMirrored(display_num, bitdepth, wav_design_um=wav_design_um, wav_um=wav_um)
+                else:
+                    raise Exception("SLM type not recognized")
             else:
-                raise Exception("SLM type not recognized")
-        else:
-            raise Exception("Please specify an SLM with the slm field")
-        self.phase_mgr = PhaseManager.PhaseManager(slm)
-        wrapped_slm = CorrectedSLM.CorrectedSLM(slm, self.phase_mgr)
-        iface.set_SLM(wrapped_slm)
-        if "camera" in config:
-            camera_dict = config["camera"]
-            camera_type = camera_dict["type"]
-            if camera_type == "virtual":
-                camera = iface.set_camera()
-            elif camera_type == "network":
-                url = camera_dict["url"]
-                import CameraClient
-                camera = CameraClient.CameraClient(url)
-                iface.set_camera(camera)
+                raise Exception("Please specify an SLM with the slm field")
+            self.phase_mgr = PhaseManager.PhaseManager(slm)
+            wrapped_slm = CorrectedSLM.CorrectedSLM(slm, self.phase_mgr)
+            iface.set_SLM(wrapped_slm)
+            if "camera" in config:
+                camera_dict = config["camera"]
+                camera_type = camera_dict["type"]
+                if camera_type == "virtual":
+                    camera = iface.set_camera()
+                elif camera_type == "network":
+                    url = camera_dict["url"]
+                    import CameraClient
+                    camera = CameraClient.CameraClient(url)
+                    iface.set_camera(camera)
+                else:
+                    raise Exception("Camera type not recognized")
             else:
-                raise Exception("Camera type not recognized")
-        else:
-            raise Exception("Please specify a camera with the camera field")
-        self.iface = iface
-        # additional phase. For instance, Fresnel lens or zernike polynomial. 
-        #self.phase_mgr = PhaseManager.PhaseManager(self.iface.slm)
-        while self.__check_worker_req() != self.WorkerRequest.Stop:
-            if self.__sock.poll(self.timeout) == 0: # in milliseconds
-                continue
-            addr = self.safe_recv()
-            delimit = self.safe_recv_string()
-            msg_str = self.safe_recv_string()
-            if msg_str is None:
-                self.safe_send(addr, [1], ["Send more"])
-            self.handle_msg(addr, msg_str)
-        print("Worker finishing")
+                raise Exception("Please specify a camera with the camera field")
+            self.iface = iface
+            # additional phase. For instance, Fresnel lens or zernike polynomial. 
+            #self.phase_mgr = PhaseManager.PhaseManager(self.iface.slm)
+            while self.__check_worker_req() != self.WorkerRequest.Stop:
+                if self.__sock.poll(self.timeout) == 0: # in milliseconds
+                    continue
+                addr = self.safe_recv()
+                delimit = self.safe_recv_string()
+                msg_str = self.safe_recv_string()
+                if msg_str is None:
+                    self.safe_send(addr, [1], ["Send more"])
+                self.handle_msg(addr, msg_str)
+            print("Worker finishing")
+        except Exception as e:
+            print("Worker errored: " + str(e))
 
     @safe_process
     def reply_id(self):
@@ -419,7 +422,7 @@ class Server(object):
     @safe_process
     def perform_fourier_calibration(self):
         # Hard coded for now
-        self.iface.cameraslm.fourier_calibrate(array_shape=[10,10], array_pitch=[30,40], plot=True)
+        self.iface.cameraslm.fourier_calibrate(array_shape=[5,5], array_pitch=[30,40], plot=True)
         return [1], ["ok"]
 
     @safe_process
