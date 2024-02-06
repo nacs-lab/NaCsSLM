@@ -2,7 +2,7 @@
 Template for writing a subclass for SLM hardware control in :mod:`slmsuite`.
 Outlines which SLM superclass functions must be implemented.
 """
-from slmsuite.hardware.slms import SLM
+from slmsuite.hardware.slms.slm import SLM
 
 class CorrectedSLM(SLM):
     """
@@ -88,12 +88,12 @@ class CorrectedSLM(SLM):
         """
         return self.slm.info()
 
-    def write(self, phase):
+    def write(self, phase, name="from_function_call", **kwargs):
         """
 
         """
-        self.phase_mgr.set_base(phase, "from_function_call")
-        self.slm.write(self.phase_mgr.get())
+        self.phase_mgr.set_base(phase, name)
+        self.slm.write(self.phase_mgr.get(), **kwargs)
 
     def _write_hw(self, phase):
         """

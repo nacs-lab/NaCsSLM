@@ -228,7 +228,7 @@ class Server(object):
             raise Exception("Please specify a camera with the camera field")
         self.iface = iface
         # additional phase. For instance, Fresnel lens or zernike polynomial. 
-        self.phase_mgr = PhaseManager.PhaseManager(self.iface.slm)
+        #self.phase_mgr = PhaseManager.PhaseManager(self.iface.slm)
         while self.__check_worker_req() != self.WorkerRequest.Stop:
             if self.__sock.poll(self.timeout) == 0: # in milliseconds
                 continue
@@ -300,7 +300,7 @@ class Server(object):
 
     @safe_process
     def project(self):
-        self.iface.write_to_SLM(self.phase_mgr.get())
+        self.iface.write_to_SLM(self.phase_mgr.get(), self.phase_mgr.base_source)
         return [1], ["ok"]
 
     @safe_process

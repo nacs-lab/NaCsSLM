@@ -260,11 +260,11 @@ class SLMSuiteInterface:
         else:
             return -1
 
-    def write_to_SLM(self, phase_pattern):
+    def write_to_SLM(self, phase_pattern, name):
         """
 
         """
         if self.cameraslm is None:
             return -1
         else:
-            self.cameraslm.slm.write(phase_pattern, settle=True)
+            self.cameraslm.slm.write(phase_pattern, name, settle=True)
