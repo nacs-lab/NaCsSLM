@@ -303,7 +303,7 @@ class Server(object):
 
     @safe_process
     def project(self):
-        self.iface.write_to_SLM(self.phase_mgr.get(), self.phase_mgr.base_source)
+        self.iface.write_to_SLM(self.phase_mgr.base, self.phase_mgr.base_source)
         return [1], ["ok"]
 
     @safe_process

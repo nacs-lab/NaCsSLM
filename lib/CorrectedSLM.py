@@ -88,11 +88,11 @@ class CorrectedSLM(SLM):
         """
         return self.slm.info()
 
-    def write(self, phase, name="from_function_call", **kwargs):
+    def write(self, base, name="from_function_call", **kwargs):
         """
 
         """
-        self.phase_mgr.set_base(phase, name)
+        self.phase_mgr.set_base(base, name)
         self.slm.write(self.phase_mgr.get(), **kwargs)
 
     def _write_hw(self, phase):
