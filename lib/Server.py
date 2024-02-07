@@ -225,6 +225,14 @@ class Server(object):
                     import CameraClient
                     camera = CameraClient.CameraClient(url)
                     iface.set_camera(camera)
+                elif camera_type == "thorcam_scientific_camera":
+                    import slmsuite.hardware.cameras.thorlabs
+                    if "sn" in camera_dict:
+                        serial = str(camera_dict["sn"])
+                    else:
+                        serial = ""
+                    camera = slmsuite.hardware.cameras.thorlabs.ThorCam(serial)
+                    iface.set_camera(camera)
                 else:
                     raise Exception("Camera type not recognized")
             else:
