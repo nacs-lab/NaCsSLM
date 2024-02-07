@@ -45,6 +45,7 @@ class SLMSuiteInterface:
         self.slm = slm
         if self.camera is not None:
             self.cameraslm = slmsuite.hardware.cameraslms.FourierSLM(self.camera, self.slm)
+        return slm
 
     def set_camera(self, camera=None):
         """
@@ -62,6 +63,7 @@ class SLMSuiteInterface:
         self.camera = camera
         if self.slm is not None:
             self.cameraslm = slmsuite.hardware.cameraslms.FourierSLM(self.camera, self.slm)
+        return camera
 
     def set_slm_amplitude(self, amp):
         """
@@ -120,9 +122,9 @@ class SLMSuiteInterface:
             no_calib = 0
         ntargets = target_spot_array.shape[1]
         if ntargets == 1:
-            self.hologram.optimize(method="GS", maxiter=n_iters, feedback='computational_spot')
+            self.hologram.optimize(method="GS", maxiter=n_iters, feedback='computational_spot', stat_groups=['computational'])
         else:
-            self.hologram.optimize(method="WGS-Kim", maxiter=n_iters, feedback='computational_spot')
+            self.hologram.optimize(method="WGS-Kim", maxiter=n_iters, feedback='computational_spot', stat_groups=['computational_spot'])
 
         full_path = None
         full_path2 = None

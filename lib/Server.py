@@ -310,8 +310,10 @@ class Server(object):
     def calculate(self):
         target_data = self.safe_recv()
         target_data = np.frombuffer(target_data)
+        target_data = np.copy(target_data)
         amp_data = self.safe_recv()
         amp_data = np.frombuffer(amp_data)
+        amp_data = np.copy(amp_data)
         iteration_data = self.safe_recv()
         #print(iteration_data)
         iteration_number = int.from_bytes(iteration_data, 'little')

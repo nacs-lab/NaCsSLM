@@ -68,7 +68,7 @@ class CorrectedSLM(SLM):
         )
 
         # Zero the display using the superclass `write()` function.
-        self.slm.write(None)
+        # self.slm.write(None)
 
     @staticmethod
     def info(verbose=True):
