@@ -26,8 +26,9 @@ class Client(object):
             def f(self, *args): #timeout in milliseconds
                 try:
                     func(self, *args)
-                except:
-                    pass
+                except Exception as e:
+                    print('Error in client function: ' + str(e))
+                    return None
                 rep = []
                 for i in recv_type:
                     if self.__sock.poll(timeout) == 0:

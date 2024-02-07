@@ -58,6 +58,7 @@ class CameraClient(Camera):
         self.__sock = None
         self.recreate_sock()
         self.timeout = 500
+        self.connected = True # Start off true.
         self.width = self.get_width()
         self.height = self.get_height()
         # Finally, use the superclass constructor to initialize other required variables.
@@ -70,21 +71,27 @@ class CameraClient(Camera):
         )
 
         # ... Other setup.
-        self.info = self._info()
+        self.info = self._info
 
     # decorators for polling
     # recv_type = 1 is a string receive
-    def poll_recv(recv_type = [1], timeout=-1, flag=0):
+    def poll_recv(recv_type = [1], timeout=1000, flag=0, default_val=None):
         def deco(func):
             def f(self, *args): #timeout in milliseconds
                 try:
-                    func(self, *args)
-                except:
-                    pass
+                    if self.connected:
+                        func(self, *args)
+                    else:
+                        return default_val
+                except Exception as e:
+                    print('Error in client function: ' + str(e))
+                    return None
                 rep = []
                 for i in recv_type:
                     if self.__sock.poll(timeout) == 0:
-                        rep.append(None)
+                        self.connected=False
+                        print("Warning: CameraClient is not connected")
+                        rep.append(default_val[i])
                     else:
                         if i == 0:
                             rep.append(self.__sock.recv(flag))
@@ -136,7 +143,7 @@ class CameraClient(Camera):
         return deco
 
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def close(self):
         self.__sock.send_string("close")
 
@@ -159,25 +166,25 @@ class CameraClient(Camera):
         return "Please use the info method of the instance, since a socket is necessary"
 
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def _info(self, verbose=True):
         self.__sock.send_string("info")
 
     ### Property Configuration ###
 
     @recv1float
-    @poll_recv([0])
+    @poll_recv([0], default_val=[np.array([1.0]).tobytes()])
     def get_exposure(self):
         self.__sock.send_string("get_exposure")
     
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def set_exposure(self, exposure_s):
         self.__sock.send_string("set_exposure", zmq.SNDMORE)
         self.__sock.send(exposure_s.tobytes())
 
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def _set_woi(self, woi):
         self.__sock.send_string("set_woi", zmq.SNDMORE)
         self.__sock.send(woi.tobytes())
@@ -196,29 +203,32 @@ class CameraClient(Camera):
         @CameraClient.poll_recv([0])
         def _get_image(self):
             self.__sock.send_string("get_image")
-        return _get_image(self)
+        if self.connected:
+            return _get_image(self)
+        else:
+            return np.zeros((self.height, self.width), dtype=np.int32)
 
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def flush(self):
         self.__sock.send_string("flush")
 
     @recv1int
-    @poll_recv([0])
+    @poll_recv([0], default_val=[int(512).to_bytes(4, 'little')])
     def get_width(self):
         self.__sock.send_string("get_width")
 
     @recv1int
-    @poll_recv([0])
+    @poll_recv([0], default_val=[int(512).to_bytes(4, 'little')])
     def get_height(self):
         self.__sock.send_string("get_height")
 
     @recv1int
-    @poll_recv([0])
+    @poll_recv([0], default_val=[int(512).to_bytes(4, 'little')])
     def get_depth(self):
         self.__sock.send_string("get_depth")
 
     @recv1
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def get_serial(self):
         self.__sock.send_string("get_serial")
