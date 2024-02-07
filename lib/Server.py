@@ -423,30 +423,26 @@ class Server(object):
         
     @safe_process
     def perform_fourier_calibration(self):
-        # Hard coded for now
-        self.iface.cameraslm.fourier_calibrate(array_shape=[5,5], array_pitch=[30,40], plot=True)
+        # Hard coded for now to use defaults, but can grab pitch and size from client
+        self.iface.perform_fourier_calibration()
         return [1], ["ok"]
 
     @safe_process
     def save_fourier_calibration(self):
         save_path = self.safe_recv_string()
         save_name = self.safe_recv_string()
-        self.iface.cameraslm.save_fourier_calibration(path=save_path, name=save_name)
-        return [1], ["ok"]
+        _, path = self.iface.save_fourier_calibration(path=save_path, name=save_name)
+        return [1], [path]
 
     @safe_process
     def load_fourier_calibration(self):
         path = self.safe_recv_string()
-        self.iface.cameraslm.load_fourier_calibration(file_path=path)
+        self.iface.load_fourier_calibration(file_path=path)
         return [1], ["ok"]
 
     @safe_process
     def perform_camera_feedback(self):
         niters = self.safe_recv()
         niters = int.from_bytes(niters, 'little')
-        if self.iface.hologram is None:
-            return [1], ["no hologram exists to continue camera feedback"]
-        else:
-            self.iface.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False)
-            self.iface.hologram.plot_stats()
-            return [1], ["ok"]
+        _, msg = self.iface.perform_camera_feedback(niters)
+        return [1], [msg]

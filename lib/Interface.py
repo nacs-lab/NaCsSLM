@@ -27,6 +27,7 @@ class SLMSuiteInterface:
         self.camera = None
         self.cameraslm = None
         self.hologram = None
+        self.fourier_calibration_source = ''
 
     def set_SLM(self, slm=None):
         """
@@ -270,3 +271,26 @@ class SLMSuiteInterface:
             return -1
         else:
             self.cameraslm.slm.write(base, name, settle=True)
+
+    def perform_fourier_calibration(self, shape=[5,5], pitch=[30,40]):
+        self.cameraslm.fourier_calibrate(array_shape=shape, array_pitch=pitch, plot=True)
+        self.fourier_calibration_source = 'unsaved'
+        return 0
+
+    def save_fourier_calibration(self, save_path, save_name):
+        path = self.cameraslm.save_fourier_calibration(path=save_path, name=save_name)
+        self.fourier_calibration_source = path
+        return 0, path
+
+    def load_fourier_calibration(self, path):
+        self.cameraslm.load_fourier_calibration(file_path=path)
+        self.fourier_calibration_source = path
+        return 0
+
+    def perform_camera_feedback(self, niters):
+        if self.hologram is None:
+            return -1, "no hologram exists to continue camera feedback"
+        else:
+            self.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False)
+            self.hologram.plot_stats()
+            return 0, "ok"
