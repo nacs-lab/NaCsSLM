@@ -117,6 +117,8 @@ class Server(object):
             msg_type, rep = self.save_fourier_calibration()
         elif msg_str == "load_fourier_calibration":
             msg_type, rep = self.load_fourier_calibration()
+        elif msg_str == "get_fourier_calibration":
+            msg_type, rep = self.get_fourier_calibration()
         elif msg_str == "perform_camera_feedback":
             msg_type, rep = self.perform_camera_feedback()
         else:
@@ -439,6 +441,10 @@ class Server(object):
         path = self.safe_recv_string()
         self.iface.load_fourier_calibration(file_path=path)
         return [1], ["ok"]
+
+    @safe_process
+    def get_fourier_calibration(self):
+        return [1], [self.iface.fourier_calibration_source]
 
     @safe_process
     def perform_camera_feedback(self):
