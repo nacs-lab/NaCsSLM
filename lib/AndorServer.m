@@ -59,6 +59,9 @@ classdef AndorServer < handle
         function cleanup = register_cleanup(self)
             cleanup = FacyOnCleanup(@recreate_sock, self);
         end
+        function delete(self)
+            self.serv.close()
+        end
     end
 
     properties(Constant, Access=private)

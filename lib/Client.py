@@ -1,5 +1,6 @@
 import zmq
 from datetime import datetime
+import numpy as np
 
 class Client(object):
     def recreate_sock(self):
@@ -158,3 +159,68 @@ class Client(object):
         ret = self.send_pattern(fname)
         ret2 = self.send_project()
         return ret, ret2
+
+class FeedbackClient(object):
+    def recreate_sock(self):
+        if self.__sock is not None:
+            self.__sock.close()
+        self.__sock = self.__ctx.socket(zmq.REQ)
+        self.__sock.connect(self.__url)
+
+    def __init__(self, url: str):
+        # network
+        self.__url = url
+        self.__ctx = zmq.Context()
+        self.__sock = None
+        self.recreate_sock()
+        self.timeout = 500
+        rep = self.send_id()
+        print(rep)
+
+    # decorators for polling
+
+    # recv_type = 1 is a string receive
+    def poll_recv(recv_type = [1], timeout=1000, flag=0):
+        def deco(func):
+            def f(self, *args): #timeout in milliseconds
+                try:
+                    func(self, *args)
+                except Exception as e:
+                    print('Error in client function: ' + str(e))
+                    return None
+                rep = []
+                for i in recv_type:
+                    if self.__sock.poll(timeout) == 0:
+                        rep.append(None)
+                    else:
+                        if i == 0:
+                            rep.append(self.__sock.recv(flag))
+                        else:
+                            rep.append(self.__sock.recv_string(flag))
+                now = datetime.now()
+                print(now.strftime("%Y%m%d_%H%M%S"))
+                return rep
+            return f
+        return deco
+
+    def recv1arr(reshape_dims=None, dtype=float):
+        def deco(func):
+            def f(*args, **kwargs):
+                rep = func(*args, **kwargs)
+                data = None
+                if rep is not None:
+                    data = np.frombuffer(rep[0], dtype=dtype)
+                    if reshape_dims is not None:
+                        data = np.reshape(data, reshape_dims)
+                return data
+            return f
+        return deco
+
+    @poll_recv([1])
+    def send_id(self):
+        self.__sock.send_string("id") # handshake
+
+    @recv1arr
+    @poll_recv([0])
+    def get_spot_amps(self):
+        self.__sock.send_string("get_spot_amps")

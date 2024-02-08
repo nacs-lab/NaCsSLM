@@ -3,9 +3,10 @@ import zmq
 import threading
 import numpy as np
 from enum import Enum
+import time
 
 class AndorServer(object):
-
+    # To save sockets, this class doubles as also the feedback server for the sequence. 
     class WorkerRequest(Enum):
         NoRequest = 0
         Stop = 1
@@ -58,6 +59,10 @@ class AndorServer(object):
         self.stop_worker()
         self.__sock.close()
         self.__ctx.destroy
+
+    def close(self):
+        self.stop_worker()
+        self.__sock.close()
 
     def stop_worker(self):
         if hasattr(self, '__worker'):
@@ -114,6 +119,11 @@ class AndorServer(object):
         elif msg_str == "flush":
             self.safe_send(addr, [1], ["ok"])
             return True
+        elif msg_str == "id":
+            self.safe_send(addr, [1], ["MATLAB Experimental Control Server/Andor Server"])
+            return True
+        elif msg_str == "get_spot_amps":
+            pass
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -194,6 +204,7 @@ class AndorServer(object):
                 self.safe_send(addr, msg_type, rep)
                 with self.__worker_lock:
                     self.__worker_req = self.WorkerRequest.NoRequest
+            time.sleep(0.5)
         print("Worker finishing")
 
     def _reply(self, msg_type, data):
@@ -205,6 +216,8 @@ class AndorServer(object):
         elif msg_type == "set_woi":
             return [1], ["ok"]
         elif msg_type == "get_image":
+            return [0], [data.tobytes()]
+        elif msg_type == "get_spot_amps":
             return [0], [data.tobytes()]
         else:
             return [1], ["unknown reply"]
