@@ -4,6 +4,8 @@ from datetime import datetime
 from slmsuite.holography import toolbox
 import numpy as np
 
+# Data saving related
+
 def save_slm_calculation(hologram, save_options, extra_data = None):
     """
 
@@ -144,18 +146,36 @@ def load_add_phase(base_path, bConfig, bPhase):
         data = np.load(data_path)
     return config,data
 
+# Callback for hologram feedback
+def feedback_client_callback(client):
+    def func(hologram):
+        spot_amps = client.get_spot_amps()
+        hologram.external_spot_amp = spot_amps
+    return func
 
 ## Pattern generation
 ## Return 2D target array 'targets' such that targets[0,:] = x coords and targets[1,:] = y coords
 ## Returns also target_amps which is a 1D array of ones the length of the array size
 #Center at 256 since coordinates are 512x512
 
-def gen_square_targets(side_length, pixel_spacing):
+def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
     targets = np.zeros((2, side_length**2))
-    min_x = int(np.ceil(256-(side_length*pixel_spacing)/2))
+    min_x = -(side_length*pixel_spacing)/2
     min_y = min_x
-    x_targets = [min_x + i*pixel_spacing for i in range(0,side_length)]
-    y_targets = [min_y + i*pixel_spacing for i in range(0,side_length)]
-    targets = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
+    x_targets = np.array([min_x + i*(side_length * pixel_spacing) / (side_length - 1) for i in range(0,side_length)])
+    y_targets = np.array([min_y + i*(side_length * pixel_spacing) / (side_length - 1) for i in range(0,side_length)])
+    targets_mesh = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
+    x_targets = targets_mesh[0,:]
+    y_targets = targets_mesh[1,:]
+    if rot_angle != 0:
+        rot_x_targets = x_targets * np.cos(rot_angle) - y_targets * np.sin(rot_angle)
+        rot_y_targets = x_targets * np.sin(rot_angle) + y_targets * np.cos(rot_angle)
+    else:
+        rot_x_targets = x_targets
+        rot_y_targets = y_targets
+    x_targets = rot_x_targets + offset[0]
+    y_targets = rot_y_targets + offset[1]
+    targets[0,:] = x_targets
+    targets[1,:] = y_targets
     target_amps = np.ones(side_length**2)
     return targets, target_amps
