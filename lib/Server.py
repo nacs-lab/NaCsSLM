@@ -392,7 +392,10 @@ class Server(object):
         #    self.additional_phase = phase
         #else:
         #    self.additional_phase = self.additional_phase + phase
-        self.phase_mgr.add_fresnel_lens(focal_length[0])
+        if len(focal_length) == 1:
+            self.phase_mgr.add_fresnel_lens(focal_length[0])
+        else:
+            self.phase_mgr.add_fresnel_lens(focal_length)
         return [1], ["ok"]
 
     @safe_process

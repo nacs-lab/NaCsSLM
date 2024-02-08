@@ -62,9 +62,9 @@ class Client(object):
     @poll_recv([1], timeout=-1)
     def send_calculate(self, targets, amps, iterations):
         self.__sock.send_string("calculate", zmq.SNDMORE)
-        self.__sock.send(targets.tobytes(), zmq.SNDMORE)
+        self.__sock.send(targets.astype(np.float64).tobytes(), zmq.SNDMORE)
         #self.__sock.send(targets.tobytes(), zmq.SNDMORE)
-        self.__sock.send(amps.tobytes(), zmq.SNDMORE)
+        self.__sock.send(amps.astype(np.float64).tobytes(), zmq.SNDMORE)
         self.__sock.send(int(iterations).to_bytes(1, 'little'))
 
     @poll_recv([1, 1], timeout=-1)
@@ -88,12 +88,12 @@ class Client(object):
     def send_fresnel_lens(self, focal_length):
         # focal length should be one element array
         self.__sock.send_string("add_fresnel_lens", zmq.SNDMORE)
-        self.__sock.send(focal_length.tobytes())
+        self.__sock.send(focal_length.astype(np.float64).tobytes())
 
     @poll_recv([1])
     def send_zernike_poly(self, zernike_arr):
         self.__sock.send_string("add_zernike_poly", zmq.SNDMORE)
-        self.__sock.send(zernike_arr.tobytes())
+        self.__sock.send(zernike_arr.astype(np.float64).tobytes())
 
     @poll_recv([1])
     def send_reset_add_phase(self):

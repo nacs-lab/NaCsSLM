@@ -181,13 +181,13 @@ class CameraClient(Camera):
     @poll_recv([1], default_val=["Not connected"])
     def set_exposure(self, exposure_s):
         self.__sock.send_string("set_exposure", zmq.SNDMORE)
-        self.__sock.send(exposure_s.tobytes())
+        self.__sock.send(exposure_s.astype(np.float64).tobytes())
 
     @recv1
     @poll_recv([1], default_val=["Not connected"])
     def _set_woi(self, woi):
         self.__sock.send_string("set_woi", zmq.SNDMORE)
-        self.__sock.send(woi.tobytes())
+        self.__sock.send(woi.astype(np.float64).tobytes())
         self.width = int(woi[1])
         self.height = int(woi[3])
 
