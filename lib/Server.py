@@ -436,8 +436,13 @@ class Server(object):
         
     @safe_process
     def perform_fourier_calibration(self):
-        # Hard coded for now to use defaults, but can grab pitch and size from client
-        self.iface.perform_fourier_calibration()
+        shape = self.safe_recv()
+        shape_data = np.frombuffer(shape)
+        shape_data= np.copy(shape_data)
+        pitch = self.safe_recv()
+        pitch_data = np.frombuffer(pitch)
+        pitch_data = np.copy(pitch_data)
+        self.iface.perform_fourier_calibration(shape_data, pitch_data)
         return [1], ["ok"]
 
     @safe_process

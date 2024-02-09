@@ -119,8 +119,10 @@ class Client(object):
         self.__sock.send_string("get_current_phase_info")
 
     @poll_recv([1], timeout=-1)
-    def send_perform_fourier_calibration(self):
-        self.__sock.send_string("perform_fourier_calibration")
+    def send_perform_fourier_calibration(self, shape=np.array([5,5]), pitch=np.array([30,40])):
+        self.__sock.send_string("perform_fourier_calibration", zmq.SNDMORE)
+        self.__sock.send(shape.astype(np.float64).tobytes(), zmq.SNDMORE)
+        self.__sock.send(pitch.astype(np.float64).tobytes())
 
     @poll_recv([1])
     def send_save_fourier_calibration(self, save_path, save_name):
