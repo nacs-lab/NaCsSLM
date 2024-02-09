@@ -65,6 +65,14 @@ class CameraServer(object):
         else:
             raise Exception("Please specify a camera with the camera field")
 
+        self.averages = 1
+        if "averages" in config:
+            self.averages = config["averages"]
+
+        self.plot = 0
+        if "plot" in config:
+            self.plot = config["plot"]
+
         # lock for worker request
         self.__worker_lock = threading.Lock()
 
@@ -255,27 +263,37 @@ class CameraServer(object):
             self.cam.set_woi(woi)
         return [1], ["woi set"]
 
+    def _get_image(self):
+        retry_count = 10
+        idx = 0
+        while idx < retry_count:
+            img = self.cam.get_image()
+            idx = idx + 1
+            if img is not None:
+                break
+            time.sleep(1)
+            print("Retry image grabbing " + str(idx))
+        return img
+
     def get_image(self):
         if self.cam_type == "virtual":
             img = np.random.rand(1024, 1024)
         else:
-            retry_count = 10
-            idx = 0
-            while idx < retry_count:
-                img = self.cam.get_image()
-                idx = idx + 1
-                if img is not None:
-                    break
-                time.sleep(1)
-                print("Retry image grabbing " + str(idx))
+            for i in range(int(self.averages)):
+                if i == 0:
+                    img = self._get_image()
+                else:
+                    img += self._get_image()
+            img = img / self.averages
             if self.cam_type == "the_imaging_source":
                 img = img.astype(np.int32)
             if self.cam_type == "thorcam_scientific_camera":
                 img = img.astype(np.int32)
-            now = datetime.now()
-            print(now.strftime("%Y%m%d_%H%M%S"))
-            plt.imshow(img, cmap='Greys')
-            plt.show()
+            #now = datetime.now()
+            #print(now.strftime("%Y%m%d_%H%M%S"))
+            if self.plot:
+                plt.imshow(img, cmap='gray')
+                plt.show()
         return [0], [img.tobytes()]
 
     def flush(self):
