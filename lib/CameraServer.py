@@ -271,7 +271,7 @@ class CameraServer(object):
                 img = img.astype(np.int32)
             if self.cam_type == "thorcam_scientific_camera":
                 img = img.astype(np.int32)
-            plt.imshow(img)
+            plt.imshow(img, cmap='Greys')
             plt.show()
         return [0], [img.tobytes()]
 

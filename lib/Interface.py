@@ -291,6 +291,6 @@ class SLMSuiteInterface:
         if self.hologram is None:
             return -1, "no hologram exists to continue camera feedback"
         else:
-            self.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False)
+            self.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False, stat_groups=['experimental_spot'])
             self.hologram.plot_stats()
             return 0, "ok"
