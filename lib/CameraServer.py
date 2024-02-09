@@ -6,6 +6,7 @@ import slmsuite.hardware.cameras.camera
 from enum import Enum
 import time
 from matplotlib import pyplot as plt
+from datetime import datetime
 
 class CameraServer(object):
 
@@ -271,6 +272,8 @@ class CameraServer(object):
                 img = img.astype(np.int32)
             if self.cam_type == "thorcam_scientific_camera":
                 img = img.astype(np.int32)
+            now = datetime.now()
+            print(now.strftime("%Y%m%d_%H%M%S"))
             plt.imshow(img, cmap='Greys')
             plt.show()
         return [0], [img.tobytes()]
