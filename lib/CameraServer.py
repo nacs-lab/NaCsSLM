@@ -4,6 +4,8 @@ import threading
 import numpy as np
 import slmsuite.hardware.cameras.camera
 from enum import Enum
+import time
+from matplotlib import pyplot as plt
 
 class CameraServer(object):
 
@@ -256,9 +258,21 @@ class CameraServer(object):
         if self.cam_type == "virtual":
             img = np.random.rand(1024, 1024)
         else:
-            img = self.cam.get_image()
+            retry_count = 10
+            idx = 0
+            while idx < retry_count:
+                img = self.cam.get_image()
+                idx = idx + 1
+                if img is not None:
+                    break
+                time.sleep(1)
+                print("Retry image grabbing " + str(idx))
             if self.cam_type == "the_imaging_source":
-                img = img.astype(np.int16)
+                img = img.astype(np.int32)
+            if self.cam_type == "thorcam_scientific_camera":
+                img = img.astype(np.int32)
+            plt.imshow(img)
+            plt.show()
         return [0], [img.tobytes()]
 
     def flush(self):

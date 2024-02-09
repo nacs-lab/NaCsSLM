@@ -198,9 +198,9 @@ class CameraClient(Camera):
             self._set_woi(woi)
             
 
-    def get_image(self, timeout_s=1):
+    def get_image(self, timeout_ms=60000):
         @CameraClient.recv1arr((self.height, self.width), np.int32)
-        @CameraClient.poll_recv([0])
+        @CameraClient.poll_recv([0], timeout=timeout_ms)
         def _get_image(self):
             self.__sock.send_string("get_image")
         if self.connected:

@@ -9,6 +9,8 @@ import re
 import CorrectedSLM
 from enum import Enum
 
+bDebugMode = 1
+
 class Server(object):
 
     class WorkerRequest(Enum):
@@ -252,6 +254,8 @@ class Server(object):
             print("Worker finishing")
         except Exception as e:
             print("Worker errored: " + str(e))
+            if bDebugMode:
+                raise
 
     @safe_process
     def reply_id(self):
