@@ -449,13 +449,13 @@ class Server(object):
     def save_fourier_calibration(self):
         save_path = self.safe_recv_string()
         save_name = self.safe_recv_string()
-        _, path = self.iface.save_fourier_calibration(path=save_path, name=save_name)
+        _, path = self.iface.save_fourier_calibration(save_path, save_name)
         return [1], [path]
 
     @safe_process
     def load_fourier_calibration(self):
         path = self.safe_recv_string()
-        self.iface.load_fourier_calibration(file_path=path)
+        self.iface.load_fourier_calibration(path)
         return [1], ["ok"]
 
     @safe_process
