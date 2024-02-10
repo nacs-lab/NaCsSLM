@@ -123,6 +123,10 @@ class Server(object):
             msg_type, rep = self.get_fourier_calibration()
         elif msg_str == "perform_camera_feedback":
             msg_type, rep = self.perform_camera_feedback()
+        elif msg_str == "get_base":
+            msg_type, rep = self.get_base()
+        elif msg_str == "get_additional_phase":
+            msg_type, rep = self.get_additional_phase()
         else:
             self.safe_send(addr, [1], [f''])
             print("Unknown request " + msg_str)
@@ -432,11 +436,23 @@ class Server(object):
     @safe_process
     def get_current_phase_info(self):
         base_str = "base: " + self.phase_mgr.base_source
-        add_str = ""
+        add_str = " additional: "
         log = self.phase_mgr.add_log
         for item in log:
             add_str = add_str + str(item[0]) + ":" + str(item[1]) + ","
         return [1], [base_str + add_str]
+
+    @safe_process
+    def get_base(self):
+        return [1], [self.phase_mgr.base_source]
+
+    @safe_process
+    def get_additional_phase(self):
+        rep = ""
+        log = self.phase_mgr.add_log
+        for item in log:
+            rep = rep + str(item[0]) + ";" + str(item[1]) + ";"
+        return [1], [rep]
         
     @safe_process
     def perform_fourier_calibration(self):

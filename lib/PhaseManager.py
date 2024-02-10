@@ -30,12 +30,12 @@ class PhaseManager(object):
     def add_fresnel_lens(self, focal_length):
         phase= slmsuite.holography.toolbox.phase.lens(self.slm, focal_length)
         self.additional = self.additional + phase
-        self.add_log.append(["fresnel_lens", focal_length])
+        self.add_log.append(["fresnel_lens", np.array2string(focal_length, separator=',')])
     
     def add_zernike_poly(self, zernike_list):
         phase = slmsuite.holography.toolbox.phase.zernike_sum(self.slm, zernike_list, aperture="cropped")
         self.additional = self.additional + phase
-        self.add_log.append(["zernike", zernike_list])
+        self.add_log.append(["zernike", str(zernike_list)])
 
     def save_to_file(self, save_options, extra_info=None):
         full_path, full_path2 = utils.save_add_phase(self, save_options, extra_info)

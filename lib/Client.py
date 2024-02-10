@@ -1,6 +1,8 @@
 import zmq
 from datetime import datetime
 import numpy as np
+import yaml
+import ast
 
 class Client(object):
     def recreate_sock(self):
@@ -11,6 +13,22 @@ class Client(object):
 
     def __init__(self, url: str):
         # network
+        config_file = False
+        self.config = None
+        if not url.startswith('tcp'):
+            #config file in this case
+            config_file = True
+            with open(config_file, 'r') as fhdl:
+                config = yaml.load(fhdl, Loader=yaml.FullLoader)
+            self.config = config
+            if "url" in config:
+                url = config["url"]
+            else:
+                raise Exception("Please specify a url for this client")
+
+        if config_file:
+            self._load_config()
+
         self.__url = url
         self.__ctx = zmq.Context()
         self.__sock = None
@@ -144,6 +162,14 @@ class Client(object):
     def send_get_fourier_calibration(self):
         self.__sock.send_string("get_fourier_calibration")
 
+    @poll_recv([1])
+    def send_get_base(self):
+        self.__sock.send_string("get_base")
+
+    @poll_recv([1])
+    def send_get_additional_phase(self):
+        self.__sock.send_string("get_additional_phase")
+
     def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
         ret = self.send_calculate(targets, amps, iterations)
         if ret[0] != "ok":
@@ -161,6 +187,76 @@ class Client(object):
         ret = self.send_pattern(fname)
         ret2 = self.send_project()
         return ret, ret2
+
+    def _load_config(self):
+        config = self.config
+        if config is None:
+            return
+        else:
+            for key in config:
+                if key == "pattern":
+                    self.send_pattern(config["pattern"])
+                elif key == "fourier_calibration":
+                    self.send_load_fourier_calibration(config["fourier_calibration"])
+                elif key.startswith("correction_pattern"):
+                    self.send_correction(config[key])
+                elif key.startswith("fresnel_lens"):
+                    self.send_fresnel_lens(np.array(ast.literal_eval(config[key])))
+                elif key == "zernike":
+                    res = ast.literal_eval(config["zernike"])
+                    new_list = []
+                    for item in res:
+                        new_list.append([item[0][0], item[0][1], item[1]])
+                    self.send_zernike_poly(np.array(new_list))
+            return
+
+    def load_config(self, fname):
+        with open(fname, 'r') as fhdl:
+            config = yaml.load(fhdl, Loader=yaml.FullLoader)
+        self.config = config
+        self._load_config()
+        
+    def save_config(self, fname):
+        config_dict = dict()
+        base_str = self.send_get_base()
+        if base_str != "":
+            config_dict["pattern"] = base_str[0]
+        add_str = self.send_get_additional_phase()
+        corrections = add_str[0].split(';')
+        correction_pattern_idx = 0
+        file_idx = 0
+        fresnel_lens_idx = 0
+        zernike_idx = 0
+        for i in range(int(np.floor(len(corrections)/2))):
+            this_key = corrections[2 * i]
+            this_val = corrections[2 * i + 1]
+            if this_key == 'file_correction':
+                if correction_pattern_idx > 0:
+                    config_dict[this_key + str(correction_pattern_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                correction_pattern_idx += 1
+            elif this_key == "file":
+                if file_idx > 0:
+                    config_dict[this_key + str(file_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                file_idx += 1
+            elif this_key == 'fresnel_lens':
+                if fresnel_lens_idx > 0:
+                    config_dict[this_key + str(fresnel_lens_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                fresnel_lens_idx += 1
+            elif this_key == "zernike":
+                if zernike_idx > 0:
+                    config_dict[this_key + str(zernike_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                zernike_idx += 1
+        with open(fname, 'w') as fhdl:
+            yaml.dump(config_dict, fhdl)
+        return
 
 class FeedbackClient(object):
     def recreate_sock(self):
