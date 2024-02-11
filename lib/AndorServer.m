@@ -43,6 +43,13 @@ classdef AndorServer < handle
                 self.reply(msg, -1);
             elseif strcmp(msg, "set_woi")
                 self.reply(msg, -1);
+            elseif strcmp(msg, "get_spot_amps")
+                scan_fn = msg_data{1};
+                fn_hdl = str2func(scan_fn);
+                scan_name = msg_data{2};
+                this_date, this_time = StartScan2(fn_hdl(scan_name));
+                res = run_analysis(this_date, this_time);
+                self.reply(msg, res);
             end
         end
     end

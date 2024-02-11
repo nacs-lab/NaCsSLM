@@ -7,6 +7,7 @@ import utils
 import PhaseManager
 import re
 import CorrectedSLM
+import Client
 from enum import Enum
 
 bDebugMode = 1
@@ -30,6 +31,8 @@ class Server(object):
         # lock for worker request
         self.__worker_lock = threading.Lock()
 
+        self.feedback_client = None
+
         if "url" in config:
             url = config["url"]
         else:
@@ -48,6 +51,26 @@ class Server(object):
                 self.n_iterations = alg_dict["n_iterations"]
             else:
                 self.n_iterations = 20
+        if "feedback" in config:
+            feedback_config = config["feedback"]
+            if "url" in feedback_config:
+                url = feedback_config["url"]
+            else:
+                raise Exception("Please specify a url for the feedback client")
+            if "NumPerParamAvg" in feedback_config:
+                NumPerParamAvg = feedback_config["NumPerParamAvg"]
+            else:
+                NumPerParamAvg = -1
+            if "scan_fname" in feedback_config:
+                scan_fname = feedback_config["scan_fname"]
+            else:
+                raise Exception("Please specify a fname for the scan")
+            if "scan_name" in feedback_config:
+                scan_name = feedback_config["scan_name"]
+            else:
+                raise Exception("Please specify a scan name")
+        self.feedback_client = Client.FeedbackClient(url, scan_fname, scan_name, NumPerParamAvg=NumPerParamAvg)
+
         # network
         self.__url = url
         self.__ctx = zmq.Context()
@@ -123,6 +146,8 @@ class Server(object):
             msg_type, rep = self.get_fourier_calibration()
         elif msg_str == "perform_camera_feedback":
             msg_type, rep = self.perform_camera_feedback()
+        elif msg_str == "perform_scan_feedback":
+            msg_type, rep = self.perform_scan_feedback()
         elif msg_str == "get_base":
             msg_type, rep = self.get_base()
         elif msg_str == "get_additional_phase":
@@ -488,3 +513,18 @@ class Server(object):
         niters = int.from_bytes(niters, 'little')
         _, msg = self.iface.perform_camera_feedback(niters)
         return [1], [msg]
+
+    @safe_process
+    def perform_scan_feedback(self):
+        if self.feedback_client is None:
+            return [1], ["No feedback client on server."]
+        else:
+            niters = self.safe_recv()
+            niters = int.from_bytes(niters, 'little')
+            NumPerParamAvg = self.safe_recv()
+            NumPerParamAvg = int.from_bytes(NumPerParamAvg, 'little')
+            if NumPerParamAvg != -1:
+                self.feedback_client.NumPerParamAvg = NumPerParamAvg
+            _, msg = self.iface.perform_scan_feedback(niters, self.feedback_client)
+            return [1], [msg]
+

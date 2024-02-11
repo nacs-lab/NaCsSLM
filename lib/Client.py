@@ -158,6 +158,12 @@ class Client(object):
         self.__sock.send_string("perform_camera_feedback", zmq.SNDMORE)
         self.__sock.send(int(niters).to_bytes(1, 'little'))
 
+    @poll_recv([1], timeout=-1)
+    def send_perform_scan_feedback(self, niters=20, NumPerParamAvg=-1):
+        self.__sock.send_string("perform_scan_feedback", zmq.SNDMORE)
+        self.__sock.send(int(niters).to_bytes(1, 'little'), zmq.SNDMORE)
+        self.__sock.send(int(NumPerParamAvg).to_bytes(4, 'little'))
+
     @poll_recv([1])
     def send_get_fourier_calibration(self):
         self.__sock.send_string("get_fourier_calibration")
@@ -274,38 +280,46 @@ class FeedbackClient(object):
         self.__sock = self.__ctx.socket(zmq.REQ)
         self.__sock.connect(self.__url)
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, scan_fname, scan_name, NumPerParamAvg = -1):
         # network
         self.__url = url
         self.__ctx = zmq.Context()
         self.__sock = None
         self.recreate_sock()
         self.timeout = 500
+        self.connected = True
         rep = self.send_id()
         print(rep)
+        
+        self.scan_fname = scan_fname
+        self.scan_name = scan_name
+        self.NumPerParamAvg = NumPerParamAvg
 
     # decorators for polling
 
     # recv_type = 1 is a string receive
-    def poll_recv(recv_type = [1], timeout=1000, flag=0):
+    def poll_recv(recv_type = [1], timeout=1000, flag=0, default_val=None):
         def deco(func):
             def f(self, *args): #timeout in milliseconds
                 try:
-                    func(self, *args)
+                    if self.connected:
+                        func(self, *args)
+                    else:
+                        return default_val
                 except Exception as e:
                     print('Error in client function: ' + str(e))
                     return None
                 rep = []
                 for i in recv_type:
                     if self.__sock.poll(timeout) == 0:
-                        rep.append(None)
+                        self.connected=False
+                        print("Warning: FeedbackClient is not connected")
+                        rep.append(default_val[i])
                     else:
                         if i == 0:
                             rep.append(self.__sock.recv(flag))
                         else:
                             rep.append(self.__sock.recv_string(flag))
-                now = datetime.now()
-                print(now.strftime("%Y%m%d_%H%M%S"))
                 return rep
             return f
         return deco
@@ -323,11 +337,14 @@ class FeedbackClient(object):
             return f
         return deco
 
-    @poll_recv([1])
+    @poll_recv([1], default_val=["Not connected"])
     def send_id(self):
         self.__sock.send_string("id") # handshake
 
     @recv1arr
-    @poll_recv([0])
+    @poll_recv([0], default_val=np.array([-1.0]))
     def get_spot_amps(self):
-        self.__sock.send_string("get_spot_amps")
+        self.__sock.send_string("get_spot_amps", zmq.SNDMORE)
+        self.__sock.send_string(self.scan_fname, zmq.SNDMORE)
+        self.__sock.send_string(self.scan_name, zmq.SNDMORE)
+        self.__sock.send(int(self.NumPerParamAvg).to_bytes(4, 'little'))

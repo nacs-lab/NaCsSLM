@@ -294,3 +294,12 @@ class SLMSuiteInterface:
             self.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='experimental_spot', fixed_phase=False, stat_groups=['experimental_spot'])
             self.hologram.plot_stats()
             return 0, "ok"
+
+    def perform_scan_feedback(self, niters, client):
+        if self.hologram is None:
+            return -1, "no hologram exists to continue camera feedback"
+        else:
+            cb_fn = utils.feedback_client_callback(client)
+            self.hologram.optimize(method='WGS-Kim', maxiter=niters, feedback='external_spot', callback=cb_fn, fixed_phase=False, stat_groups=['external_spot'])
+            self.hologram.plot_stats()
+            return 0, "ok"

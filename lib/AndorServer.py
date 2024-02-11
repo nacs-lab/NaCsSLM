@@ -123,6 +123,11 @@ class AndorServer(object):
             self.safe_send(addr, [1], ["MATLAB Experimental Control Server/Andor Server"])
             return True
         elif msg_str == "get_spot_amps":
+            scan_fname = self.safe_recv_string()
+            scan_name = self.safe_recv_string()
+            NumPerParamAvg = int.from_bytes(self.safe_recv(), 'little')
+            with self.__req_from_worker_lock:
+                self.__req_data = [scan_fname, scan_name, NumPerParamAvg]
             pass
         else:
             self.safe_send(addr, [1], [f''])

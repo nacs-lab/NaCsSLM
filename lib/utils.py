@@ -150,7 +150,11 @@ def load_add_phase(base_path, bConfig, bPhase):
 def feedback_client_callback(client):
     def func(hologram):
         spot_amps = client.get_spot_amps()
-        hologram.external_spot_amp = spot_amps
+        if np.array_equal(spot_amps, np.array([-1.0])):
+            nspots = len(hologram.spot_amp)
+            hologram.external_spot_amp = np.array([1.0 for i in range(nspots)])
+        else:
+            hologram.external_spot_amp = spot_amps
     return func
 
 ## Pattern generation
