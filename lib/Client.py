@@ -258,6 +258,15 @@ class Client(object):
             yaml.dump(config_dict, fhdl)
         return
 
+    def close(self):
+        if self.__sock is not None:
+            self.__sock.close()
+
+    def __del__(self):
+        if self.__sock is not None:
+            self.__sock.close()
+        self.__ctx.destroy
+
 class FeedbackClient(object):
     def recreate_sock(self):
         if self.__sock is not None:
