@@ -144,6 +144,16 @@ class Server(object):
             msg_type, rep = self.load_fourier_calibration()
         elif msg_str == "get_fourier_calibration":
             msg_type, rep = self.get_fourier_calibration()
+            
+        elif msg_str == "perform_wavefront_calibration":
+            msg_type, rep = self.perform_wavefront_calibration()
+        elif msg_str == "save_wavefront_calibration":
+            msg_type, rep = self.save_wavefront_calibration()
+        elif msg_str == "load_wavefront_calibration":
+            msg_type, rep = self.load_wavefront_calibration()
+        elif msg_str == "get_wavefront_calibration":
+            msg_type, rep = self.get_wavefront_calibration()
+            
         elif msg_str == "perform_camera_feedback":
             msg_type, rep = self.perform_camera_feedback()
         elif msg_str == "perform_scan_feedback":
@@ -506,6 +516,41 @@ class Server(object):
     @safe_process
     def get_fourier_calibration(self):
         return [1], [self.iface.fourier_calibration_source]
+    
+    
+    
+    @safe_process
+    def perform_wavefront_calibration(self):
+        interference_point = self.safe_recv()
+        interference_point_data = np.frombuffer(interference_point)
+        interference_point_data= np.copy(interference_point_data)
+        field_point = self.safe_recv()
+        field_point_data = np.frombuffer(field_point)
+        field_point_data = np.copy(field_point_data)
+        test_super_pixel = self.safe_recv()
+        test_super_pixel_data = np.frombuffer(test_super_pixel_data)
+        test_super_pixel_data = np.copy(test_super_pixel_data)
+        if test_super_pixel_data[0] == -1:
+            test_super_pixel_data = None
+        self.iface.perform_wavefront_calibration(interference_point_data, field_point_data,test_super_pixel_data)
+        return [1], ["ok"]
+
+    @safe_process
+    def save_wavefront_calibration(self):
+        save_path = self.safe_recv_string()
+        save_name = self.safe_recv_string()
+        _, path = self.iface.save_wavefront_calibration(save_path, save_name)
+        return [1], [path]
+
+    @safe_process
+    def load_wavefront_calibration(self):
+        path = self.safe_recv_string()
+        self.iface.load_wavefront_calibration(path)
+        return [1], ["ok"]
+    @safe_process
+    def get_wavefront_calibration(self):
+        return [1], [self.iface.wavefront_calibration_source]
+
 
     @safe_process
     def perform_camera_feedback(self):

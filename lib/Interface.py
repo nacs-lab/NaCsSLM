@@ -286,6 +286,25 @@ class SLMSuiteInterface:
         self.cameraslm.load_fourier_calibration(file_path=path)
         self.fourier_calibration_source = path
         return 0
+    
+    
+    #        self.iface.perform_wavefront_calibration(interference_point_data, field_point_data,test_super_pixel_data)
+    def perform_wavefront_calibration(self, interference_point_data, field_point_data,test_super_pixel_data): 
+        self.cameraslm.wavefront_calibrate(interference_point_data, field_point_data, test_superpixel = test_super_pixel_data)
+        self.wavefront_calibration_source = 'unsaved'
+        return 0
+
+    def save_wavefront_calibration(self, save_path, save_name):
+        path = self.cameraslm.save_wavefront_calibration(path=save_path, name=save_name)
+        self.wavefront_calibration_source = path
+        return 0, path
+
+    def load_wavefront_calibration(self, path):
+        self.cameraslm.load_wavefront_calibration(file_path=path)
+        self.wavefront_calibration_source = path
+        return 0
+    
+    
 
     def perform_camera_feedback(self, niters):
         if self.hologram is None:
