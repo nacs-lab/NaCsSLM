@@ -118,6 +118,8 @@ class Server(object):
             msg_type, rep = self.save_calculation()
         elif msg_str == "add_fresnel_lens":
             msg_type, rep = self.add_fresnel_lens()
+        elif msg_str == "add_offset":
+            msg_type, rep = self.add_offset()
         elif msg_str == "add_zernike_poly":
             msg_type, rep = self.add_zernike_poly()
         elif msg_str == "reset_additional_phase":
@@ -440,6 +442,16 @@ class Server(object):
         else:
             self.phase_mgr.add_fresnel_lens(focal_length)
         return [1], ["ok"]
+    
+    
+    @safe_process
+    def add_offset(self):
+        offset = self.safe_recv()
+        offset_data = np.frombuffer(offset)
+        offset_data = np.copy(offset_data)
+        self.phase_mgr.add_offset(offset_data)
+        return [1], ["ok"]
+
 
     @safe_process
     def add_zernike_poly(self):

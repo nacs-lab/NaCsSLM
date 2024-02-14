@@ -155,11 +155,11 @@ class Client(object):
         
         
     @poll_recv([1], timeout=-1)
-    def send_perform_wavefront_calibration(self, interference_point=np.array([900,400]), field_point=np.array([0.25,0]), test_super_pixel = np.array([-1,-1])):  # todo parameters 
+    def send_perform_wavefront_calibration(self, interference_point=np.array([900,400]), field_point=np.array([0.25,0]), test_super_pixel = np.array([-1,-1])):  
         self.__sock.send_string("perform_wavefront_calibration", zmq.SNDMORE)
         self.__sock.send(interference_point.astype(np.float64).tobytes(), zmq.SNDMORE)
         self.__sock.send(field_point.astype(np.float64).tobytes(), zmq.SNDMORE)
-        self.__sock.send(test_super_pixel.astype(np.float64).tobytes(), zmq.SNDMORE)
+        self.__sock.send(test_super_pixel.astype(np.float64).tobytes())
 
 
     @poll_recv([1])
@@ -173,7 +173,9 @@ class Client(object):
         self.__sock.send_string("load_wavefront_calibration", zmq.SNDMORE)
         self.__sock.send_string(path)      
         
-        
+    @poll_recv([1])
+    def send_get_wavefront_calibration(self):
+        self.__sock.send_string("get_wavefront_calibration")        
 
     @poll_recv([1], timeout=-1)
     def send_perform_camera_feedback(self, niters=20):

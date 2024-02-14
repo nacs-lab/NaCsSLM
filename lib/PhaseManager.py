@@ -36,6 +36,10 @@ class PhaseManager(object):
         phase = slmsuite.holography.toolbox.phase.zernike_sum(self.slm, zernike_list, aperture="cropped")
         self.additional = self.additional + phase
         self.add_log.append(["zernike", str(zernike_list)])
+    def add_offset(self, offset_data):
+        phase = slmsuite.holography.toolbox.phase.blaze(self.slm, vector = offset_data)
+        self.additional = self.additional + phase
+        self.add_log.append(["offset", str(offset_data)])
 
     def save_to_file(self, save_options, extra_info=None):
         full_path, full_path2 = utils.save_add_phase(self, save_options, extra_info)
