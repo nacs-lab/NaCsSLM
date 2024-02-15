@@ -107,6 +107,12 @@ class Client(object):
         # focal length should be one element array
         self.__sock.send_string("add_fresnel_lens", zmq.SNDMORE)
         self.__sock.send(focal_length.astype(np.float64).tobytes())
+        
+    @poll_recv([1])
+    def send_offset(self, offset = np.array([0.0,0.0])):
+        # offset should be two element array
+        self.__sock.send_string("add_offset", zmq.SNDMORE)
+        self.__sock.send(offset.astype(np.float64).tobytes())
 
     @poll_recv([1])
     def send_zernike_poly(self, zernike_arr):
