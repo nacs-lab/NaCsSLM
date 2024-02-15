@@ -69,7 +69,7 @@ class Server(object):
                 scan_name = feedback_config["scan_name"]
             else:
                 raise Exception("Please specify a scan name")
-        self.feedback_client = Client.FeedbackClient(url, scan_fname, scan_name, NumPerParamAvg=NumPerParamAvg)
+            self.feedback_client = Client.FeedbackClient(url, scan_fname, scan_name, NumPerParamAvg=NumPerParamAvg)
 
         # network
         self.__url = url
