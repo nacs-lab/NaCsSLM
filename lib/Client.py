@@ -234,7 +234,7 @@ class Client(object):
                     self.send_pattern(config["pattern"])
                 elif key == "fourier_calibration":
                     self.send_load_fourier_calibration(config["fourier_calibration"])
-                elif key.startswith("correction_pattern"):
+                elif key.startswith("file_correction"):
                     self.send_correction(config[key])
                 elif key.startswith("fresnel_lens"):
                     self.send_fresnel_lens(np.array(ast.literal_eval(config[key])))
