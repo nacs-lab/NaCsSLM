@@ -290,7 +290,7 @@ class Client(object):
                 else:
                     config_dict[this_key] = this_val
                 zernike_idx += 1
-        with open(fname, 'xw') as fhdl:
+        with open(fname, 'x') as fhdl:
             yaml.dump(config_dict, fhdl)
         return
 
