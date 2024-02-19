@@ -77,6 +77,7 @@ def save_slm_calculation(hologram, save_options, extra_data = None):
     if save_options["target"] is True:
         # Here, we save the target. The target is in the computational space
         npy_data["target"] = hologram.target
+        npy_data["weights"] = hologram.weights
 
     if (save_options["slm_pattern"] is True) or (save_options["ff_pattern"] is True) or (save_options["target"] is True):
         full_path2 = save_options["path"] + os.sep + save_options["prefix"] + save_options["name"] + "_data"
