@@ -244,6 +244,8 @@ class Client(object):
                     for item in res:
                         new_list.append([item[0][0], item[0][1], item[1]])
                     self.send_zernike_poly(np.array(new_list))
+                elif key == "offset":
+                    self.send_offset(np.array(ast.literal_eval(config[key])))
             return
 
     def load_config(self, fname):
@@ -263,6 +265,7 @@ class Client(object):
         file_idx = 0
         fresnel_lens_idx = 0
         zernike_idx = 0
+        offset_idx = 0
         for i in range(int(np.floor(len(corrections)/2))):
             this_key = corrections[2 * i]
             this_val = corrections[2 * i + 1]
@@ -290,6 +293,12 @@ class Client(object):
                 else:
                     config_dict[this_key] = this_val
                 zernike_idx += 1
+            elif this_key == "offset":
+                if offset_idx > 0:
+                    config_dict[this_key + str(offset_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                offset_idx += 1
         with open(fname, 'x') as fhdl:
             yaml.dump(config_dict, fhdl)
         return

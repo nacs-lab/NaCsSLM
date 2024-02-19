@@ -162,7 +162,8 @@ def feedback_client_callback(client):
 ## Returns also target_amps which is a 1D array of ones the length of the array size
 #Center at 256 since coordinates are 512x512
 
-def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
+def gen_square_targets2(side_length, pixel_spacing, rot_angle, offset):
+    # WARNING: This does not generate an array with pixel spacing = pixel_spacing
     targets = np.zeros((2, side_length**2))
     min_x = -(side_length*pixel_spacing)/2
     min_y = min_x
@@ -182,4 +183,32 @@ def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
     targets[0,:] = x_targets
     targets[1,:] = y_targets
     target_amps = np.ones(side_length**2)
+    return targets, target_amps
+
+def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
+    if isinstance(side_length, (int, float)):
+        side_length = np.array([side_length, side_length])
+    if isinstance(pixel_spacing, (int, float)):
+        pixel_spacing = np.array([pixel_spacing, pixel_spacing])
+    targets = np.zeros((2, np.prod(side_length)))
+    min_x = -(side_length[0] - 1) * pixel_spacing[0] / 2
+    min_y = -(side_length[1] - 1) * pixel_spacing[1] / 2
+    max_x = (side_length[0] - 1) * pixel_spacing[0] / 2
+    max_y = (side_length[1] - 1) * pixel_spacing[1] / 2
+    x_targets = np.linspace(min_x, max_x, side_length[0])
+    y_targets = np.linspace(min_y, max_y, side_length[1])
+    targets_mesh = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
+    x_targets = targets_mesh[0,:]
+    y_targets = targets_mesh[1,:]
+    if rot_angle != 0:
+        rot_x_targets = x_targets * np.cos(rot_angle) - y_targets * np.sin(rot_angle)
+        rot_y_targets = x_targets * np.sin(rot_angle) + y_targets * np.cos(rot_angle)
+    else:
+        rot_x_targets = x_targets
+        rot_y_targets = y_targets
+    x_targets = rot_x_targets + offset[0]
+    y_targets = rot_y_targets + offset[1]
+    targets[0,:] = x_targets
+    targets[1,:] = y_targets
+    target_amps = np.ones(np.prod(side_length))
     return targets, target_amps
