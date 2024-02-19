@@ -273,6 +273,12 @@ class Client(object):
         # focal length should be one element array
         self.__sock.send_string("add_fresnel_lens", zmq.SNDMORE)
         self.__sock.send(focal_length.astype(np.float64).tobytes())
+        
+    @poll_recv([1])
+    def send_offset(self, offset = np.array([0.0,0.0])):
+        # offset should be two element array
+        self.__sock.send_string("add_offset", zmq.SNDMORE)
+        self.__sock.send(offset.astype(np.float64).tobytes())
 
     @poll_recv([1])
     def send_zernike_poly(self, zernike_arr):
@@ -423,7 +429,7 @@ class Client(object):
         self.__sock.send_string("save_fourier_calibration", zmq.SNDMORE)
         self.__sock.send_string(save_path, zmq.SNDMORE)
         self.__sock.send_string(save_name)
-
+     
     @poll_recv([1])
     def send_load_fourier_calibration(self, path):
         """
@@ -441,6 +447,30 @@ class Client(object):
         """
         self.__sock.send_string("load_fourier_calibration", zmq.SNDMORE)
         self.__sock.send_string(path)
+        
+        
+    @poll_recv([1], timeout=-1)
+    def send_perform_wavefront_calibration(self, interference_point=np.array([900,400]), field_point=np.array([0.25,0]), test_super_pixel = np.array([-1,-1])):  
+        self.__sock.send_string("perform_wavefront_calibration", zmq.SNDMORE)
+        self.__sock.send(interference_point.astype(np.float64).tobytes(), zmq.SNDMORE)
+        self.__sock.send(field_point.astype(np.float64).tobytes(), zmq.SNDMORE)
+        self.__sock.send(test_super_pixel.astype(np.float64).tobytes())
+
+
+    @poll_recv([1])
+    def send_save_wavefront_calibration(self, save_path, save_name):
+        self.__sock.send_string("save_wavefront_calibration", zmq.SNDMORE)
+        self.__sock.send_string(save_path, zmq.SNDMORE)
+        self.__sock.send_string(save_name)
+
+    @poll_recv([1])
+    def send_load_wavefront_calibration(self, path):
+        self.__sock.send_string("load_wavefront_calibration", zmq.SNDMORE)
+        self.__sock.send_string(path)      
+        
+    @poll_recv([1])
+    def send_get_wavefront_calibration(self):
+        self.__sock.send_string("get_wavefront_calibration")        
 
     @poll_recv([1], timeout=-1)
     def send_perform_camera_feedback(self, niters=20):
@@ -601,7 +631,7 @@ class Client(object):
                     self.send_pattern(config["pattern"])
                 elif key == "fourier_calibration":
                     self.send_load_fourier_calibration(config["fourier_calibration"])
-                elif key.startswith("correction_pattern"):
+                elif key.startswith("file_correction"):
                     self.send_correction(config[key])
                 elif key.startswith("fresnel_lens"):
                     self.send_fresnel_lens(np.array(ast.literal_eval(config[key])))
@@ -611,6 +641,8 @@ class Client(object):
                     for item in res:
                         new_list.append([item[0][0], item[0][1], item[1]])
                     self.send_zernike_poly(np.array(new_list))
+                elif key == "offset":
+                    self.send_offset(np.array(ast.literal_eval(config[key])))
             return
 
     def load_config(self, fname):
@@ -656,6 +688,7 @@ class Client(object):
         file_idx = 0
         fresnel_lens_idx = 0
         zernike_idx = 0
+        offset_idx = 0
         for i in range(int(np.floor(len(corrections)/2))):
             this_key = corrections[2 * i]
             this_val = corrections[2 * i + 1]
@@ -683,7 +716,13 @@ class Client(object):
                 else:
                     config_dict[this_key] = this_val
                 zernike_idx += 1
-        with open(fname, 'w') as fhdl:
+            elif this_key == "offset":
+                if offset_idx > 0:
+                    config_dict[this_key + str(offset_idx)] = this_val
+                else:
+                    config_dict[this_key] = this_val
+                offset_idx += 1
+        with open(fname, 'x') as fhdl:
             yaml.dump(config_dict, fhdl)
         return
 
