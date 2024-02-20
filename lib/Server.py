@@ -54,7 +54,7 @@ class Server(object):
         if "feedback" in config:
             feedback_config = config["feedback"]
             if "url" in feedback_config:
-                url = feedback_config["url"]
+                feedback_url = feedback_config["url"]
             else:
                 raise Exception("Please specify a url for the feedback client")
             if "NumPerParamAvg" in feedback_config:
@@ -69,7 +69,7 @@ class Server(object):
                 scan_name = feedback_config["scan_name"]
             else:
                 raise Exception("Please specify a scan name")
-            self.feedback_client = Client.FeedbackClient(url, scan_fname, scan_name, NumPerParamAvg=NumPerParamAvg)
+            self.feedback_client = Client.FeedbackClient(feedback_url, scan_fname, scan_name, NumPerParamAvg=NumPerParamAvg)
 
         # network
         self.__url = url
