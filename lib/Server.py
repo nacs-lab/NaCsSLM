@@ -114,6 +114,8 @@ class Server(object):
             msg_type, rep = self.use_pattern()
         elif msg_str == "calculate":
             msg_type, rep = self.calculate()
+        elif msg_str == "init_hologram":
+            msg_type, rep = self.init_hologram()
         elif msg_str == "save_calculation":
             msg_type, rep = self.save_calculation()
         elif msg_str == "add_fresnel_lens":
@@ -146,7 +148,6 @@ class Server(object):
             msg_type, rep = self.load_fourier_calibration()
         elif msg_str == "get_fourier_calibration":
             msg_type, rep = self.get_fourier_calibration()
-            
         elif msg_str == "perform_wavefront_calibration":
             msg_type, rep = self.perform_wavefront_calibration()
         elif msg_str == "save_wavefront_calibration":
@@ -155,7 +156,6 @@ class Server(object):
             msg_type, rep = self.load_wavefront_calibration()
         elif msg_str == "get_wavefront_calibration":
             msg_type, rep = self.get_wavefront_calibration()
-            
         elif msg_str == "perform_camera_feedback":
             msg_type, rep = self.perform_camera_feedback()
         elif msg_str == "perform_scan_feedback":
@@ -387,6 +387,15 @@ class Server(object):
         else:
             print("Not integer number of targets")
             return [1], ["error: not integer number of targets"]
+
+    @safe_process
+    def init_hologram(self):
+        path = self.safe_recv_string()
+        if re.match(r'[A-Z]:', path) is None:
+            # check to see if it's an absolute path
+            path = self.pattern_path + path
+        msg = self.iface.init_hologram(path, self.computational_space)
+        return [1], [msg]
 
     @safe_process
     def save_calculation(self):

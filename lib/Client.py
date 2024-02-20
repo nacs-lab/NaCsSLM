@@ -170,6 +170,11 @@ class Client(object):
         """
         self.__sock.send_string("use_additional_phase", zmq.SNDMORE)
         self.__sock.send_string(path_str)
+
+    @poll_recv([1])
+    def send_init_hologram(self, path_str):
+        self.__sock.send_string("init_hologram", zmq.SNDMORE)
+        self.__sock.send_string(path_str)
     
     @poll_recv([1], timeout=-1)
     def send_calculate(self, targets, amps, iterations):

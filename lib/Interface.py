@@ -136,6 +136,29 @@ class SLMSuiteInterface:
         else:
             return full_path, full_path2, 0
 
+    def init_hologram(self, path, computational_shape):
+        _,data = utils.load_slm_calculation(path, 1, 1)
+        slm_amp = None
+        slm_phase = None
+        if "slm_amp" in data:
+            if not isinstance(data, float):
+                slm_amp = data["slm_amp"]
+        if "slm_phase" in data:
+            slm_phase = data["slm_phase"]
+        if "target" in data:
+            idxs = np.nonzero(data["target"])
+            ntargets = len(idxs[0])
+            target = np.zeros((2, ntargets))
+            target[0,:] = idxs[1]
+            target[1,:] = idxs[0]
+        else:
+            return "Target not found"
+        
+        self.set_slm_amplitude(slm_amp)
+        amps = np.ones(ntargets)
+        self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target, phase=slm_phase, spot_amp=amps, basis='knm', cameraslm=self.cameraslm)
+        return "ok"
+
     def save_calculation(self, save_options, extra_info=None):
         """
 
@@ -287,8 +310,6 @@ class SLMSuiteInterface:
         self.fourier_calibration_source = path
         return 0
     
-    
-    #        self.iface.perform_wavefront_calibration(interference_point_data, field_point_data,test_super_pixel_data)
     def perform_wavefront_calibration(self, interference_point_data, field_point_data,test_super_pixel_data): 
         self.cameraslm.wavefront_calibrate(interference_point_data, field_point_data, test_superpixel = test_super_pixel_data)
         self.wavefront_calibration_source = 'unsaved'

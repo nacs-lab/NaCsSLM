@@ -147,6 +147,18 @@ def load_add_phase(base_path, bConfig, bPhase):
         data = np.load(data_path)
     return config,data
 
+def get_target(data_dict):
+    idxs = np.nonzero(data_dict["target"])
+    ntargets = len(idxs[0])
+    target = np.zeros((2, ntargets))
+    target[0,:] = idxs[1]
+    target[1,:] = idxs[0]
+    return target
+
+def get_target_from_file(path):
+    _, data_dict = load_slm_calculation(path, 0, 1)
+    return get_target(data_dict)
+
 # Callback for hologram feedback
 def feedback_client_callback(client):
     def func(hologram):
