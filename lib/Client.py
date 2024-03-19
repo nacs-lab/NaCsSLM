@@ -258,6 +258,11 @@ class Client(object):
         self.__sock.send_string(path)
 
     @poll_recv([1])
+    def send_add_pattern_to_add_phase(self, path):
+        self.__sock.send_string("add_pattern_to_add_phase", zmq.SNDMORE)
+        self.__sock.send_string(path)
+
+    @poll_recv([1])
     def send_fresnel_lens(self, focal_length):
         """
         Request the Server to use a fresnel lens with a specified focal length.
