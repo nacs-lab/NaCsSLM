@@ -22,6 +22,20 @@ classdef SLMClient < handle
         function delete(self)
             self.client.close()
         end
+        
+        function res = get_status(self)
+            result = self.client.send_get_current_phase_info();
+            if ~isa(result, 'py.list')
+                res = '';
+                return
+            end
+            elem = result{1};
+            if isa(elem, 'py.NoneType')
+                res = '';
+                return
+            end
+            res = char(elem);
+        end
     end
 
     properties(Constant, Access=private)
@@ -33,14 +47,14 @@ classdef SLMClient < handle
         end
         function res = get(url)
             cache = SLMClient.cache;
-            if isKey(cache, url)
-                res = cache(url);
+            if isKey(cache, char(url))
+                res = cache(char(url));
                 if ~isempty(res) && isvalid(res)
                     return;
                 end
             end
             res = SLMClient(url);
-            cache(url) = res;
+            cache(char(url)) = res;
         end
     end
 end
