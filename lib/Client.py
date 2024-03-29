@@ -803,11 +803,11 @@ class FeedbackClient(object):
                     print('Error in client function: ' + str(e))
                     return None
                 rep = []
-                for i in recv_type:
+                for idx, i in enumerate(recv_type):
                     if self.__sock.poll(timeout) == 0:
                         self.connected=False
                         print("Warning: FeedbackClient is not connected")
-                        rep.append(default_val[i])
+                        rep.append(default_val[idx])
                     else:
                         if i == 0:
                             rep.append(self.__sock.recv(flag))
