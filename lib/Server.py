@@ -134,6 +134,8 @@ class Server(object):
             msg_type, rep = self.use_add_phase()
         elif msg_str == "use_correction":
             msg_type, rep = self.use_correction()
+        elif msg_str == "add_pattern_to_add_phase":
+            msg_type, rep = self.add_pattern_to_add_phase()
         elif msg_str == "use_slm_amp":
             msg_type, rep = self.use_slm_amp()
         elif msg_str == "project":
@@ -332,6 +334,16 @@ class Server(object):
             self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1)
         else:
             self.phase_mgr.add_correction(fname, self.config["slm"]["bitdepth"], 1) #TODO, in case you need to scale.
+        return [1], ["ok"]
+
+    @safe_process
+    def add_pattern_to_add_phase(self):
+        path = self.safe_recv_string()
+        print("Received " + fname)
+        if re.match(r'[A-Z]:', path) is None:
+            # check to see if it's an absolute path
+            path = self.pattern_path + path
+        self.phase_mgr.add_pattern_to_additional(path)
         return [1], ["ok"]
 
     @safe_process

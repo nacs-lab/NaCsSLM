@@ -52,6 +52,11 @@ class PhaseManager(object):
         self.additional = self.additional + data["phase"]
         self.add_log.append(["file", fname])
 
+    def add_pattern_to_additional(self, fname):
+        _,data = utils.load_slm_calculation(fname, 0, 1)
+        self.additional = self.additional + data["slm_phase"]
+        self.add_log.append(["file", fname])
+
     def add_correction(self, fname, bitdepth, scale):
         with Image.open(fname) as image:
             image_array = np.array(image)
