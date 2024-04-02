@@ -537,9 +537,7 @@ class Server(object):
     @safe_process
     def get_fourier_calibration(self):
         return [1], [self.iface.fourier_calibration_source]
-    
-    
-    
+
     @safe_process
     def perform_wavefront_calibration(self):
         interference_point = self.safe_recv()
@@ -580,7 +578,7 @@ class Server(object):
         _, msg = self.iface.perform_camera_feedback(niters)
         return [1], [msg]
 
-    @safe_process
+    #@safe_process
     def perform_scan_feedback(self):
         if self.feedback_client is None:
             return [1], ["No feedback client on server."]

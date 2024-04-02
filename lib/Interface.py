@@ -23,7 +23,7 @@ class SLMSuiteInterface:
                 TODO
         """
         self.server = server
-        self.slm = None 
+        self.slm = None
         self.camera = None
         self.cameraslm = None
         self.hologram = None
@@ -153,8 +153,8 @@ class SLMSuiteInterface:
             target[1,:] = idxs[0]
         else:
             return "Target not found"
-        
-        self.set_slm_amplitude(slm_amp)
+
+        #self.set_slm_amplitude(slm_amp)
         amps = np.ones(ntargets)
         self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target, phase=slm_phase, spot_amp=amps, basis='knm', cameraslm=self.cameraslm)
         return "ok"

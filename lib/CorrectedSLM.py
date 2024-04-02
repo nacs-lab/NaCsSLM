@@ -92,6 +92,7 @@ class CorrectedSLM(SLM):
         """
 
         """
+        print("Calling to write to hardware")
         self.phase_mgr.set_base(base, name)
         self.slm.write(self.phase_mgr.get(), **kwargs)
 

@@ -8,5 +8,5 @@ camera:
   #vid_format: Y800 (2592x1944)
   #type: network
   #url: tcp://127.0.0.1:8867
-averages: 2
+averages: 1
 plot: 1

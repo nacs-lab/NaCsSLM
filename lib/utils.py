@@ -28,7 +28,7 @@ def save_slm_calculation(hologram, save_options, extra_data = None):
     if not "crop" in save_options:
         save_options["crop"] = True
 
-    full_path = None 
+    full_path = None
     full_path2 = None
     # Now, we gather all the information to save in the config
     if save_options["config"] is True:
@@ -162,11 +162,13 @@ def get_target_from_file(path):
 # Callback for hologram feedback
 def feedback_client_callback(client):
     def func(hologram):
+        hologram.cameraslm.slm.write(hologram.extract_phase(), settle=True)
         spot_amps = client.get_spot_amps()
         if np.array_equal(spot_amps, np.array([-1.0])):
             nspots = len(hologram.spot_amp)
             hologram.external_spot_amp = np.array([1.0 for i in range(nspots)])
         else:
+            print("setting external_spot_amp to " + str(spot_amps))
             hologram.external_spot_amp = spot_amps
     return func
 
