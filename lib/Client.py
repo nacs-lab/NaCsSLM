@@ -808,11 +808,11 @@ class FeedbackClient(object):
                     print('Error in client function: ' + str(e))
                     return None
                 rep = []
-                for i in recv_type:
+                for idx, i in enumerate(recv_type):
                     if self.__sock.poll(timeout) == 0:
                         self.connected=False
                         print("Warning: FeedbackClient is not connected")
-                        rep.append(default_val[i])
+                        rep.append(default_val[idx])
                     else:
                         if i == 0:
                             rep.append(self.__sock.recv(flag))
@@ -839,8 +839,8 @@ class FeedbackClient(object):
     def send_id(self):
         self.__sock.send_string("id") # handshake
 
-    @recv1arr
-    @poll_recv([0], default_val=np.array([-1.0]))
+    @recv1arr()
+    @poll_recv([0], timeout=-1, default_val=np.array([-1.0]))
     def get_spot_amps(self):
         self.__sock.send_string("get_spot_amps", zmq.SNDMORE)
         self.__sock.send_string(self.scan_fname, zmq.SNDMORE)

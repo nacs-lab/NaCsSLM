@@ -8,8 +8,13 @@ slm:
   wav_um: 0.616
 camera:
   type: network
-  url: tcp://192.168.0.100:8851
+  url: tcp://127.0.0.1:8851
 alg:
   computational_space: [2048,2048]
   n_iterations: 20
-#pattern_path: C:\msys64\home\goyan\NaCsSLM\lib
+pattern_path: C:\msys64\home\nilab\projects\NaCsSLM\lib\Na_pattern\
+feedback:
+  url: tcp://192.168.0.100:8855
+  NumPerParamAvg: 250
+  scan_fname: test
+  scan_name: test
