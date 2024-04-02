@@ -64,10 +64,14 @@ def save_slm_calculation(hologram, save_options, extra_data = None):
             amp = hologram.amp
             npy_data["slm_amp"] = amp
 
+        npy_data["raw_slm_amp"] = hologram.amp
+
         if save_options["crop"] is True:
             npy_data["slm_phase"] = toolbox.unpad(hologram.extract_phase(), hologram.slm_shape)
         else:
             npy_data["slm_phase"] = hologram.extract_phase()
+
+        npy_data["raw_slm_phase"] = hologram.phase
             
 
     if save_options["ff_pattern"] is True:
