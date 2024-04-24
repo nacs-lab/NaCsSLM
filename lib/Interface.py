@@ -140,11 +140,13 @@ class SLMSuiteInterface:
         _,data = utils.load_slm_calculation(path, 1, 1)
         slm_amp = None
         slm_phase = None
-        if "slm_amp" in data:
+        if "raw_slm_amp" in data:
             if not isinstance(data, float):
-                slm_amp = data["slm_amp"]
-        if "slm_phase" in data:
-            slm_phase = data["slm_phase"]
+                slm_amp = data["raw_slm_amp"]
+        if "raw_slm_phase" in data:
+            slm_phase = data["raw_slm_phase"]
+        else:
+            return "raw phase not saved"
         if "target" in data:
             idxs = np.nonzero(data["target"])
             ntargets = len(idxs[0])
@@ -154,7 +156,6 @@ class SLMSuiteInterface:
         else:
             return "Target not found"
 
-        #self.set_slm_amplitude(slm_amp)
         amps = np.ones(ntargets)
         self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target, phase=slm_phase, spot_amp=amps, basis='knm', cameraslm=self.cameraslm)
         return "ok"

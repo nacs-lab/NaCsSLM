@@ -4,35 +4,59 @@ classdef AndorServer < handle
     properties
         serv;
         op; % Andor operations struct
+        file_option = 1; % communicate via file 
+        fname = '';
     end
 
     methods%(Access = private)
         function self = AndorServer(url)
-            [path, ~, ~] = fileparts(mfilename('fullpath'));
-            pyglob = py.dict(pyargs('mat_srcpath', path, 'url', url));
-            try
-                py.exec('from AndorServer import AndorServer', pyglob);
-            catch
-                py.exec('import sys; sys.path.append(mat_srcpath)', pyglob);
-                py.exec('from AndorServer import AndorServer', pyglob);
+            if self.file_option
+                self.fname = url;
+            else
+                [path, ~, ~] = fileparts(mfilename('fullpath'));
+                pyglob = py.dict(pyargs('mat_srcpath', path, 'url', url));
+                try
+                    py.exec('from AndorServer import AndorServer', pyglob);
+                catch
+                    py.exec('import sys; sys.path.append(mat_srcpath)', pyglob);
+                    py.exec('from AndorServer import AndorServer', pyglob);
+                end
+                self.serv = py.eval('AndorServer(url)', pyglob);
             end
-            self.serv = py.eval('AndorServer(url)', pyglob);
 
-            self.op = AndorConfigure(); % Used with default settings
+            %self.op = AndorConfigure(); % Used with default settings
         end
         function res = check_req_from_worker(self)
-            res = cell(self.serv.check_req_from_worker());
-            res{1} = char(res{1});
+            if self.file_option
+                contents = yaml.loadFile(self.fname);
+                res = contents;
+            else
+                res = cell(self.serv.check_req_from_worker());
+                res{1} = char(res{1});
+            end
         end
         function reply(self, msg_type, rep)
-            self.serv.reply(msg_type, rep)
+            if self.file_option
+                reply_struct = struct();
+                reply_struct.request = 'reply';
+                reply_struct.msg_type = msg_type;
+                reply_struct.data = rep;
+                yaml.dumpFile(self.fname, reply_struct);
+            else
+                self.serv.reply(msg_type, rep)
+            end
         end
         function handle_msg(self)
             msg_tot = self.check_req_from_worker();
-            msg = msg_tot{1};
-            msg_data = msg_tot{2};
+            if self.file_option
+                msg = msg_tot.contents;
+                msg_data = msg_tot.data;
+            else
+                msg = msg_tot{1};
+                msg_data = msg_tot{2};
+            end
             if strcmp(msg, "get_image")
-                img = AndorTakePicture(self.op);
+                %img = AndorTakePicture(self.op);
                 img = int32(reshape(img,[1, 512 * 512]));
                 self.reply(msg, img);
             elseif strcmp(msg, "get_exposure")
@@ -47,7 +71,10 @@ classdef AndorServer < handle
                 scan_fn = msg_data{1};
                 fn_hdl = str2func(scan_fn);
                 scan_name = msg_data{2};
-                this_date, this_time = StartScan2(fn_hdl(scan_name));
+                num_tot_seq = msg_data{3};
+                scan = fn_hdl(scan_name);
+                scan.rump().NumTotSeq = num_tot_seq;
+                this_date, this_time = StartScan2(scan);
                 res = run_analysis(this_date, this_time);
                 self.reply(msg, res);
             end

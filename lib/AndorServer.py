@@ -24,10 +24,23 @@ class AndorServer(object):
         with open(config_file, 'r') as fhdl:
             self.config = yaml.load(fhdl, Loader=yaml.FullLoader)
         config = self.config
+        self.file_option = False
         if "url" in config:
             url = config["url"]
         else:
             raise Exception("Please specify a url for the server")
+        if "file_options" in config:
+            if "data_file" in config["file_options"]:
+                self.data_fname = config["file_options"]["data_file"]
+            else:
+                raise Exception("Please specify a data file name")
+            self.file_option = True
+            # initialize file
+            write_dict = dict()
+            write_dict["request"] = "None"
+            with open(self.data_fname, 'w') as file:
+                yaml.dump(write_dict, file)
+        
 
         # lock for worker request
         self.__worker_lock = threading.Lock()
@@ -83,6 +96,8 @@ class AndorServer(object):
 
     def handle_msg(self, addr,  msg_str: str) -> bool:
         # Method to handle different requests from external clients. We handle the ones we know. Andor handling will be limited for now.
+        if self.file_option:
+            write_dict = dict()
         if msg_str == "get_width":
             self.safe_send(addr, [0], [int(512).to_bytes(4, 'little')])
             return True
@@ -109,11 +124,15 @@ class AndorServer(object):
             exposure = exposure[0]
             with self.__req_from_worker_lock:
                 self.__req_data = exposure
+                if self.file_option:
+                    write_dict["data"] = str(exposure)
         elif msg_str == "set_woi":
             woi = self.safe_recv()
             woi = np.frombuffer(woi)
             with self.__req_from_worker_lock:
                 self.__req_data = woi
+                if self.file_option:
+                    write_dict["data"] = str(woi)
         elif msg_str == "get_image":
             pass
         elif msg_str == "flush":
@@ -128,6 +147,8 @@ class AndorServer(object):
             NumPerParamAvg = int.from_bytes(self.safe_recv(), 'little')
             with self.__req_from_worker_lock:
                 self.__req_data = [scan_fname, scan_name, NumPerParamAvg]
+                if self.file_option:
+                    write_dict["data"] = [scan_fname, scan_name, NumPerParamAvg]
             pass
         else:
             self.safe_send(addr, [1], [f''])
@@ -136,6 +157,11 @@ class AndorServer(object):
         with self.__req_from_worker_lock:
             self.__req_from_worker = msg_str
             self.__rep_addr = addr
+            # If files are being used communicate into file.
+            if self.file_option:
+                write_dict["request"] = msg_str
+                with open(self.data_fname, 'w') as file:
+                    yaml.dump(write_dict, file)
         with self.__worker_lock:
             self.__worker_req = self.WorkerRequest.Pending
         return True
@@ -189,6 +215,17 @@ class AndorServer(object):
     def __worker_func(self):
         # worker function
         while self.__check_worker_req() != self.WorkerRequest.Stop:
+            if self.file_option:
+                with open(self.data_fname, 'r') as file:
+                    data = yaml.load(file, Loader=yaml.FullLoader)
+                    if data["request"] == "reply":
+                        if data["msg_type"] == "get_spot_amps":
+                            data_to_send = np.array(data["data"])
+                        self.reply(data["msg_type"], data_to_send)
+                        with open(self.data_fname, 'w') as file2:
+                            write_dict = dict()
+                            write_dict["request"] = "None"
+                            yaml.dump(write_dict, file2)
             if self.__check_worker_req() == self.WorkerRequest.NoRequest:
                 if self.__sock.poll(self.timeout) == 0: # in milliseconds
                     continue
