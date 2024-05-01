@@ -14,7 +14,7 @@ alg:
   n_iterations: 20
 pattern_path: C:\msys64\home\nilab\projects\NaCsSLM\lib\Na_pattern\
 feedback:
-  url: tcp://192.168.0.100:8855
+  url: tcp://192.168.0.100:8832
   NumPerParamAvg: 250
-  scan_fname: test
-  scan_name: test
+  scan_fname: NaCsScans
+  scan_name: NaTrapLightShift
