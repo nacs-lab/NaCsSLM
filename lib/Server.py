@@ -382,6 +382,7 @@ class Server(object):
         amp_data = np.frombuffer(amp_data)
         amp_data = np.copy(amp_data)
         iteration_data = self.safe_recv()
+        phase_path = self.safe_recv_string()
         #print(iteration_data)
         iteration_number = int.from_bytes(iteration_data, 'little')
         if iteration_number == 0:
@@ -389,7 +390,20 @@ class Server(object):
         ntargets = len(target_data) / 2
         if ntargets.is_integer():
             targets = np.reshape(target_data, (2, int(ntargets)))
-            self.iface.calculate(self.computational_space, targets, amp_data, n_iters=iteration_number)
+            if phase_path == "":
+                self.iface.calculate(self.computational_space, targets, amp_data, n_iters=iteration_number)
+            else:
+                if re.match(r'[A-Z]:', phase_path) is None:
+                    # check to see if it's an absolute path
+                    phase_path = self.pattern_path + phase_path
+                    _,data = utils.load_slm_calculation(phase_path, 1, 1)
+                    slm_phase = None
+                    if "raw_slm_phase" in data:
+                        slm_phase = data["raw_slm_phase"]
+                    else:
+                        return "Cannot initiate the phase, since it was not saved"
+                self.iface.calculate(self.computational_space, targets, amp_data, n_iters=iteration_number, phase=slm_phase)
+
             #self.iface.calculate(self.computational_space, targets, amp_data, n_iters=self.n_iterations)
             # for debug
             self.iface.plot_slmplane()

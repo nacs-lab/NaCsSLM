@@ -175,16 +175,19 @@ class Client(object):
     def send_init_hologram(self, path_str):
         self.__sock.send_string("init_hologram", zmq.SNDMORE)
         self.__sock.send_string(path_str)
+
+    
     
     @poll_recv([1], timeout=-1)
-    def send_calculate(self, targets, amps, iterations):
+    def send_calculate(self, targets, amps, iterations, guess_path = ''):
         """
         Request the Server to calculate a pattern with targets, amps and number of iterations. This request has no timeout.
 
         Args:
             targets: A 2 x ntargets numpy array where the x-coordinates are the first row and y-coordinates are the second row.
             amps: A 1 x ntargets numpy array specifying the amplitudes for each target
-            iterations: Number of iterations 
+            iterations: Number of iterations
+            phase: string for the path of an initial phase guess. Default is empty string, which is to start from a random phase.
 
         Returns:
             List containing a string with the response. An "ok" is expected, but an error can also be returned.
@@ -197,7 +200,8 @@ class Client(object):
         self.__sock.send(targets.astype(np.float64).tobytes(), zmq.SNDMORE)
         #self.__sock.send(targets.tobytes(), zmq.SNDMORE)
         self.__sock.send(amps.astype(np.float64).tobytes(), zmq.SNDMORE)
-        self.__sock.send(int(iterations).to_bytes(1, 'little'))
+        self.__sock.send(int(iterations).to_bytes(1, 'little'), zmq.SNDMORE)
+        self.__sock.send_string(guess_path)
 
     @poll_recv([1, 1], timeout=-1)
     def send_save(self, save_path, save_name):
@@ -572,7 +576,7 @@ class Client(object):
         """
         self.__sock.send_string("get_additional_phase")
 
-    def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name):
+    def calculate_save_and_project(self, targets, amps, iterations, save_path, save_name, guess_phase_path = ''):
         """
         Request the Server to calculate, save and project a pattern. See send_calculate, send_save and send_project.
 
@@ -588,7 +592,7 @@ class Client(object):
 
         """
 
-        ret = self.send_calculate(targets, amps, iterations)
+        ret = self.send_calculate(targets, amps, iterations, guess_phase_path)
         if ret[0] != "ok":
             print("Calculate not successful")
             return ret
