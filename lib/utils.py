@@ -215,10 +215,12 @@ def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
     max_x = (side_length[0] - 1) * pixel_spacing[0] / 2
     max_y = (side_length[1] - 1) * pixel_spacing[1] / 2
     x_targets = np.linspace(min_x, max_x, side_length[0])
-    y_targets = np.linspace(min_y, max_y, side_length[1])
-    targets_mesh = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
-    x_targets = targets_mesh[0,:]
-    y_targets = targets_mesh[1,:]
+    #y_targets = np.linspace(min_y, max_y, side_length[1])
+    y_targets = np.linspace(max_y, min_y, side_length[1])
+    #targets_mesh = np.array(np.meshgrid(x_targets, y_targets)).T.reshape(-1,2).T
+    targets_mesh = np.array(np.meshgrid(y_targets, x_targets)).T.reshape(-1,2).T
+    x_targets = targets_mesh[1,:]
+    y_targets = targets_mesh[0,:]
     if rot_angle != 0:
         rot_x_targets = x_targets * np.cos(rot_angle) - y_targets * np.sin(rot_angle)
         rot_y_targets = x_targets * np.sin(rot_angle) + y_targets * np.cos(rot_angle)
@@ -227,6 +229,8 @@ def gen_square_targets(side_length, pixel_spacing, rot_angle, offset):
         rot_y_targets = y_targets
     x_targets = rot_x_targets + offset[0]
     y_targets = rot_y_targets + offset[1]
+    #targets[0,:] = x_targets
+    #targets[1,:] = y_targets
     targets[0,:] = x_targets
     targets[1,:] = y_targets
     target_amps = np.ones(np.prod(side_length))
