@@ -376,7 +376,7 @@ class Server(object):
     def use_aperture(self):
         r = self.safe_recv()
         r = np.frombuffer(r)
-        self.phase_mgr.set_aperture(r[0], r[1])
+        self.phase_mgr.set_aperture(r)
         return [1], ["ok"]
 
     @safe_process
