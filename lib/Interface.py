@@ -98,7 +98,7 @@ class SLMSuiteInterface:
         """
         return slmsuite.holography.toolbox.phase.lens(self.slm, focal_length), 1
 
-    def calculate(self, computational_shape, target_spot_array, target_amps=None, n_iters=20, save_options=None, extra_info = None):
+    def calculate(self, computational_shape, target_spot_array, target_amps=None, n_iters=20, save_options=None, extra_info = None, phase = None):
         """
             Calculates the required phase pattern
 
@@ -116,10 +116,10 @@ class SLMSuiteInterface:
         if self.cameraslm is None:
             return None, None, -1
         if self.cameraslm.fourier_calibration is None:
-            self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target_spot_array, spot_amp=target_amps, basis='knm', cameraslm=self.cameraslm)
+            self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target_spot_array, phase = phase, spot_amp=target_amps, basis='knm', cameraslm=self.cameraslm)
             no_calib = 1
         else:
-            self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target_spot_array, spot_amp=target_amps, basis='ij', cameraslm=self.cameraslm)
+            self.hologram = slmsuite.holography.algorithms.SpotHologram(computational_shape, target_spot_array, phase = phase, spot_amp=target_amps, basis='ij', cameraslm=self.cameraslm)
             no_calib = 0
         ntargets = target_spot_array.shape[1]
         if ntargets == 1:

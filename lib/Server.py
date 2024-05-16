@@ -412,12 +412,12 @@ class Server(object):
                 if re.match(r'[A-Z]:', phase_path) is None:
                     # check to see if it's an absolute path
                     phase_path = self.pattern_path + phase_path
-                    _,data = utils.load_slm_calculation(phase_path, 1, 1)
-                    slm_phase = None
-                    if "raw_slm_phase" in data:
-                        slm_phase = data["raw_slm_phase"]
-                    else:
-                        return "Cannot initiate the phase, since it was not saved"
+                _,data = utils.load_slm_calculation(phase_path, 1, 1)
+                slm_phase = None
+                if "raw_slm_phase" in data:
+                    slm_phase = data["raw_slm_phase"]
+                else:
+                    return "Cannot initiate the phase, since it was not saved"
                 self.iface.calculate(self.computational_space, targets, amp_data, n_iters=iteration_number, phase=slm_phase)
 
             #self.iface.calculate(self.computational_space, targets, amp_data, n_iters=self.n_iterations)

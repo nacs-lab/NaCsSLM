@@ -46,11 +46,16 @@ classdef AndorServer < handle
                 self.serv.reply(msg_type, rep)
             end
         end
-        function handle_msg(self)
+        function out = handle_msg(self)
             msg_tot = self.check_req_from_worker();
             if self.file_option
-                msg = msg_tot.contents;
-                msg_data = msg_tot.data;
+                msg = msg_tot.request;
+                out.request = msg;
+                if strcmp(msg, "None")
+                    return
+                else
+                    msg_data = msg_tot.data;
+                end
             else
                 msg = msg_tot{1};
                 msg_data = msg_tot{2};
@@ -73,10 +78,14 @@ classdef AndorServer < handle
                 scan_name = msg_data{2};
                 num_tot_seq = msg_data{3};
                 scan = fn_hdl(scan_name);
-                scan.rump().NumTotSeq = num_tot_seq;
-                this_date, this_time = StartScan2(scan);
+                scan.runp().NumTotSeq = num_tot_seq;
+                disp(['Running ', scan_fn, '(', scan_name, ')', ' for ', num2str(num_tot_seq), ' sequences'])
+                [this_date, this_time] = StartScan2(scan);
                 res = run_analysis(this_date, this_time);
-                self.reply(msg, res);
+                disp(['Replying ' num2str(res.feedback)])
+                self.reply(msg, res.feedback);
+                out.date = this_date;
+                out.time = this_time;
             end
         end
     end
