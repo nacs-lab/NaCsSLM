@@ -371,6 +371,31 @@ class Client(object):
         self.__sock.send(param2)
 
     @poll_recv([1])
+    def send_use_aperture(self, aperture_size):
+        """
+        Request the SLM to use an aperture in units of slm pixels. If the aperture_size is a single number,
+        then it is a circular aperture. Otherwise, it can be length 2 and an elliptical aperture. 
+
+        Args:
+            aperture_size: If a single number, circular aperture of that size (units of slm pixels). Otherwise, elliptical aperture.
+
+        Returns:
+            List containing a string with the response. An "ok" is expected, but an error can also be returned.
+
+        Raises:
+            None
+
+        """
+        if len(aperture_size) == 1:
+            aperture = np.array([aperture_size, aperture_size])
+        self.__sock.send_string("use_aperture", zmq.SNDMORE)
+        self.__sock.send(aperture.astype(np.float64).tobytes())
+
+    @poll_recv([1])
+    def send_reset_aperture(self):
+        self.__sock.send_string("reset_aperture")
+
+    @poll_recv([1])
     def send_project(self):
         """
         Request the Server to project the current pattern onto the SLM

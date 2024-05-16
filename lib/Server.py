@@ -138,6 +138,10 @@ class Server(object):
             msg_type, rep = self.add_pattern_to_add_phase()
         elif msg_str == "use_slm_amp":
             msg_type, rep = self.use_slm_amp()
+        elif msg_str == "use_aperture":
+            msg_type, rep = self.use_aperture()
+        elif msg_str == "reset_aperture":
+            msg_type, rep = self.reset_aperture()
         elif msg_str == "project":
             msg_type, rep = self.project()
         elif msg_str == "get_current_phase_info":
@@ -369,6 +373,18 @@ class Server(object):
         return [1], ["ok"]
 
     @safe_process
+    def use_aperture(self):
+        r = self.safe_recv()
+        r = np.frombuffer(r)
+        self.phase_mgr.set_aperture(r[0], r[1])
+        return [1], ["ok"]
+
+    @safe_process
+    def reset_aperture(self):
+        self.phase_mgr.reset_aperture()
+        return [1], ["ok"]
+
+    @safe_process
     def project(self):
         self.iface.write_to_SLM(self.phase_mgr.base, self.phase_mgr.base_source)
         return [1], ["ok"]
@@ -522,7 +538,9 @@ class Server(object):
         log = self.phase_mgr.add_log
         for item in log:
             add_str = add_str + str(item[0]) + ":" + str(item[1]) + ","
-        return [1], [base_str + add_str]
+        aperture = self.phase_mgr.aperture
+        aperture_str = " aperture: " + str(aperture)
+        return [1], [base_str + add_str + aperture_str]
 
     @safe_process
     def get_base(self):

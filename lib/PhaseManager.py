@@ -11,13 +11,18 @@ class PhaseManager(object):
         self.base_source = ''
         self.additional = np.zeros(self.shape,dtype=np.float32)
         self.add_log = [] # log for everything that has been added to this additional phase
+        self.aperture = None
+        self.mask = None
 
     def set_base(self, base, source = ''):
         self.base = base
         self.base_source = source
 
     def get(self):
-        return self.base + self.additional
+        phase = self.base + self.additional
+        if self.mask is not None:
+            phase = np.multiply(phase, self.mask)
+        return phase
 
     def reset_base(self):
         self.base = np.zeros(self.shape)
@@ -26,6 +31,24 @@ class PhaseManager(object):
     def reset_additional(self):
         self.additional = np.zeros(self.shape)
         self.add_log = []
+
+    def set_aperture(self, aperture_size):
+        self.aperture = aperture_size
+        # calculate mask
+        center = [(elem - 1)/2 for elem in self.shape]
+        mask = np.zeros(self.shape,dtype=np.float32)
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                if (i - center[0])**2 / (self.aperture[0]**2) + (j - center[1])**2 / (self.aperture[1]**2) < 1:
+                    mask[i,j] = 1
+        self.mask = mask
+
+    def get_aperture(self):
+        return self.aperture, self.mask
+
+    def reset_aperture(self):
+        self.aperture = None
+        self.mask = None
 
     def add_fresnel_lens(self, focal_length):
         phase= slmsuite.holography.toolbox.phase.lens(self.slm, focal_length)
