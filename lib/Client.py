@@ -370,7 +370,7 @@ class Client(object):
         self.__sock.send(param1, zmq.SNDMORE)
         self.__sock.send(param2)
 
-    @poll_recv([1])
+    @poll_recv([1], timeout=-1)
     def send_use_aperture(self, aperture_size):
         """
         Request the SLM to use an aperture in units of slm pixels. If the aperture_size is a single number,
