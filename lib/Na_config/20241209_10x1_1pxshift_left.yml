@@ -1,0 +1,4 @@
+file_correction: C:\msys64\home\nilab\projects\NaCsSLM\lib\Na_Correction_Patterns\CAL_LSH0803972_620nm.bmp
+fresnel_lens: '-600000.'
+pattern: C:\msys64\home\nilab\projects\NaCsSLM\lib\Na_pattern\20241209_18514510x1_Na_1pxshift_left
+zernike: '[((2, 1), -5.0), ((2, 2), -27.0), ((2, 0), 9.5)]'

@@ -1,0 +1,5 @@
+file_correction: C:\msys64\home\nilab\projects\NaCsSLM\lib\Cs_Correction_Patterns\CAL_LSH0802977_1064nm.bmp
+fresnel_lens: '500000.'
+pattern: C:\\msys64\\home\\nilab\\projects\\NaCsSLM\\lib\\Cs_pattern\\20240517_1607513x9_new_large_spacing_fdback
+zernike: '[((1, 0), 0.0), ((1, 1), 0.0), ((2, 1), 10.0), ((2, 2), 0.0), ((2, 0), 0.0),
+  ((3, 0), 0.0), ((3, 2), 0.0), ((3, 1), 0.0), ((3, 3), 0.0), ((4, 2), 0.0)]'
