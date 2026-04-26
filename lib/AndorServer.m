@@ -80,7 +80,8 @@ classdef AndorServer < handle
                 scan = fn_hdl(scan_name);
                 scan.runp().NumTotSeq = num_tot_seq;
                 disp(['Running ', scan_fn, '(', scan_name, ')', ' for ', num2str(num_tot_seq), ' sequences'])
-                [this_date, this_time] = StartScan2(scan);
+                tracker = ScanAccessTracker.get();
+                [this_date, this_time] = tracker.run_scan(scan);
                 res = run_analysis(this_date, this_time);
                 disp(['Replying ' num2str(res.feedback)])
                 self.reply(msg, res.feedback);

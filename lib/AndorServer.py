@@ -215,18 +215,25 @@ class AndorServer(object):
     def __worker_func(self):
         # worker function
         while self.__check_worker_req() != self.WorkerRequest.Stop:
-            if self.file_option:
+            worker_req = self.__check_worker_req()
+            if self.file_option and worker_req == self.WorkerRequest.Pending:
                 with open(self.data_fname, 'r') as file:
                     data = yaml.load(file, Loader=yaml.FullLoader)
                     if data["request"] == "reply":
-                        if data["msg_type"] == "get_spot_amps":
+                        msg_type = data["msg_type"]
+                        if msg_type == "get_spot_amps":
                             data_to_send = np.array(data["data"])
-                        self.reply(data["msg_type"], data_to_send)
+                        elif msg_type == "get_image":
+                            data_to_send = np.array(data["data"], dtype=np.int32)
+                        else:
+                            data_to_send = data["data"]
+                        self.reply(msg_type, data_to_send)
                         with open(self.data_fname, 'w') as file2:
                             write_dict = dict()
                             write_dict["request"] = "None"
                             yaml.dump(write_dict, file2)
-            if self.__check_worker_req() == self.WorkerRequest.NoRequest:
+                worker_req = self.__check_worker_req()
+            if worker_req == self.WorkerRequest.NoRequest:
                 if self.__sock.poll(self.timeout) == 0: # in milliseconds
                     continue
                 addr = self.safe_recv()
@@ -234,8 +241,9 @@ class AndorServer(object):
                 msg_str = self.safe_recv_string()
                 if msg_str is None:
                     self.safe_send(addr, [1], ["Send more"])
+                    continue
                 self.handle_msg(addr, msg_str)
-            elif self.__check_worker_req() == self.WorkerRequest.Reply:
+            elif worker_req == self.WorkerRequest.Reply:
                 with self.__req_from_worker_lock:
                     self.__req_from_worker = None
                     addr = self.__rep_addr
