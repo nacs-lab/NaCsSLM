@@ -198,7 +198,6 @@ class CameraServer(object):
             msg_str = self.safe_recv_string()
             if msg_str is None:
                 self.safe_send(addr, [1], ["Send more"])
-                continue
             self.handle_msg(addr, msg_str)
         print("Worker finishing")
 
